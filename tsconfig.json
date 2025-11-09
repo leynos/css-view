@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"module": "esnext",
+		"target": "es2022",
+		"strict": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"resolveJsonModule": true,
+		"allowSyntheticDefaultImports": true,
+		"skipLibCheck": true,
+		"types": ["bun-types"],
+		"baseUrl": "./src",
+		"outDir": "dist"
+	},
+	"include": ["src", "bin"],
+	"exclude": ["dist", "node_modules"]
+}

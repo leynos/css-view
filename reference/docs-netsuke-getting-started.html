@@ -1,0 +1,597 @@
+<!DOCTYPE html><html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+    <script> window.FontAwesomeConfig = { autoReplaceSvg: 'nest'};</script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <style>
+        ::-webkit-scrollbar { display: none;}
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .code-block {
+            background-color: #1a1a1a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #e0e0e0;
+            font-family: 'IBM Plex Mono', monospace;
+            position: relative;
+        }
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #333;
+        }
+        .code-block-title {
+            font-size: 0.875rem;
+            color: #999;
+        }
+        .copy-button {
+            background-color: transparent;
+            border: 1px solid #444;
+            color: #999;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+        .copy-button:hover {
+            background-color: #333;
+            color: #fff;
+        }
+        .copy-button .fa-check {
+            color: rgb(8, 145, 178);
+        }
+        .token.comment { color: #6a9955; }
+        .token.keyword { color: #569cd6; }
+        .token.string { color: #ce9178; }
+        .token.function { color: #dcdcaa; }
+        .token.number { color: #b5cea8; }
+        .token.operator { color: #d4d4d4; }
+        .token.punctuation { color: #d4d4d4; }
+        .token.parameter { color: #9cdcfe; }
+        .token.boolean { color: #569cd6; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'mono': ['"IBM Plex Mono"', 'monospace'],
+                        'sans': ['"Inter"', 'sans-serif'],
+                    },
+                    colors: {
+                        'brand-cyan': 'rgb(8, 145, 178)',
+                        'brand-magenta': '#FF00FF',
+                        'brand-dark': '#111111',
+                        'brand-gray': {
+                            100: '#f8f8f8',
+                            200: '#e9e9e9',
+                            300: '#d4d4d4',
+                            600: '#666666',
+                            800: '#2a2a2a',
+                            900: '#1a1a1a',
+                        }
+                    },
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-brand-dark">
+
+<main id="main-content" class="w-full">
+    
+    <header id="header" class="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+        <div class="container mx-auto px-8 py-4">
+            <div class="flex justify-between items-center">
+                <span class="flex items-center space-x-2 group cursor-pointer cursor-pointer" id="logo-link">
+                    <div class="w-8 h-8 flex items-center justify-center transform transition-transform duration-300 group-hover:rotate-45">
+                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="12" width="16.9706" height="16.9706" transform="rotate(45 12 0)" fill="#111111"></rect>
+                        </svg>
+                    </div>
+                    <span class="font-mono font-bold text-lg text-brand-dark">df12</span>
+                </span>
+                <nav id="main-nav" class="hidden md:flex items-center space-x-8 font-mono text-sm">
+                    <span class="text-gray-600 hover:text-brand-cyan transition-colors duration-300 cursor-pointer">Tools</span>
+                    <span class="text-gray-600 hover:text-brand-magenta transition-colors duration-300 cursor-pointer">Creative</span>
+                    <span class="text-brand-dark font-bold border-b-2 border-brand-cyan pb-1 cursor-pointer">Docs</span>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <div id="docs-layout" class="container mx-auto px-8 pt-24">
+        <div class="flex flex-col lg:flex-row">
+            <!-- Sticky Sidebar -->
+            <aside id="docs-sidebar" class="w-full lg:w-64 lg:sticky top-24 self-start mb-12 lg:mb-0 lg:mr-12 flex-shrink-0">
+    <div class="space-y-6">
+        <div class="pb-4 border-b border-gray-200">
+            <a href="#" class="inline-flex items-center space-x-2 text-gray-600 hover:text-brand-cyan transition-colors duration-200 cursor-pointer">
+                <i class="fa-solid fa-arrow-left text-sm"></i>
+                <span class="font-mono text-sm">Back to Docs</span>
+            </a>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">GET STARTED</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 font-semibold text-brand-cyan cursor-pointer">Introduction</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">5-Minute Success</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Installation</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Basic Usage</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">MANIFEST</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Netsukefile Structure</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Top-Level Structure</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Key Sections</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">CORE CONCEPTS</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Defining Rules</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Targets &amp; Actions</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Jinja Templating</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">TEMPLATING</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Basic Syntax</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Processing Order</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">foreach &amp; when</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">User-defined Macros</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">STANDARD LIBRARY</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Key Functions</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Key Filters</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Key Tests</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">CLI &amp; USAGE</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Global Options</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Commands</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Exit Codes</span></li>
+            </ul>
+        </div>
+        <div>
+            <h3 class="font-mono text-sm font-bold text-brand-dark mb-3">ADVANCED</h3>
+            <ul class="space-y-2 text-gray-600">
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Examples in Practice</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Error Handling</span></li>
+                <li><span class="hover:text-brand-cyan transition-colors duration-200 cursor-pointer">Security Considerations</span></li>
+            </ul>
+        </div>
+    </div>
+</aside>
+
+            <!-- Main Content -->
+            <article id="docs-content" class="w-full min-w-0">
+                <header id="content-header" class="pb-8 border-b border-gray-200">
+                    <h1 class="font-mono text-5xl font-bold text-brand-dark">Netsuke</h1>
+                    <p class="mt-4 text-xl text-gray-600 max-w-3xl">A modern, declarative build system designed to be intuitive, fast, and safe. Define what you want to build, not how.</p>
+                </header>
+
+                <section id="introduction" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">What is Netsuke?</h2>
+                    <p class="mt-4 text-gray-600">Netsuke is not just a <code class="bg-gray-200 text-sm px-1 py-0.5 rounded font-mono">make</code> replacement, but a <strong>build system compiler</strong>. You describe your build process in a human-readable YAML manifest (<code class="bg-gray-200 text-sm px-1 py-0.5 rounded font-mono">Netsukefile</code>), leveraging Jinja templating for dynamic logic. Netsuke compiles this into an optimized build plan executed by the high-performance <a href="https://ninja-build.org/" class="text-brand-cyan hover:underline">Ninja</a> build system.</p>
+                    
+                    <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-brand-gray-100 p-6 rounded-lg">
+                            <h3 class="font-mono text-lg font-semibold text-brand-dark mb-3">Core Philosophy</h3>
+                            <ul class="space-y-2 text-gray-600 text-sm">
+                                <li><strong>Declarative:</strong> Define <em>what</em> you want to build, not <em>how</em> step-by-step</li>
+                                <li><strong>Dynamic where needed:</strong> Use Jinja for variables, loops, conditionals, file globbing</li>
+                                <li><strong>Static Execution Plan:</strong> All dynamic logic resolved before execution</li>
+                                <li><strong>Safety First:</strong> Automatic shell escaping prevents command injection</li>
+                                <li><strong>Fast Execution:</strong> Leverages Ninja for efficient dependency tracking</li>
+                            </ul>
+                        </div>
+                        <div class="bg-brand-gray-100 p-6 rounded-lg">
+                            <h3 class="font-mono text-lg font-semibold text-brand-dark mb-3">Key Benefits</h3>
+                            <ul class="space-y-2 text-gray-600 text-sm">
+                                <li>Human-readable YAML configuration</li>
+                                <li>Jinja templating for dynamic builds</li>
+                                <li>Ninja-powered parallel execution</li>
+                                <li>Automatic dependency resolution</li>
+                                <li>Built-in safety features</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="quickstart" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">Getting Started</h2>
+                    <p class="mt-2 text-gray-600">Build from source and start building in minutes. Install. Configure. Verify.</p>
+
+                    <div id="step-1-install" class="mt-8">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-cyan text-brand-dark flex items-center justify-center font-mono font-bold text-lg">1</div>
+                            <h3 class="font-mono text-2xl font-semibold">Install</h3>
+                        </div>
+                        <p class="mt-4 text-gray-600 pl-12">Build Netsuke from source using Cargo. Ensure <code class="bg-gray-200 text-sm px-1 py-0.5 rounded font-mono">ninja</code> is available in your PATH.</p>
+                        <div class="mt-4 pl-12">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">Terminal</span>
+                                    <button class="copy-button" onclick="copyCode(this, 'cargo build --release\n# The executable will be in target/release/netsuke')">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-bash"><span class="token function">cargo</span> build --release
+<span class="token comment"># The executable will be in target/release/netsuke</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="step-2-configure" class="mt-8">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-cyan text-brand-dark flex items-center justify-center font-mono font-bold text-lg">2</div>
+                            <h3 class="font-mono text-2xl font-semibold">Configure</h3>
+                        </div>
+                        <p class="mt-4 text-gray-600 pl-12">Create a <code class="bg-gray-200 text-sm px-1 py-0.5 rounded font-mono">Netsukefile</code> in your project root.</p>
+                        <div class="mt-4 pl-12">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">Netsukefile</span>
+                                    <button class="copy-button" onclick="copyCode(this, `netsuke_version: \" 1.0.0\"\n\nvars:\n="" cc:="" gcc\n="" src_dir:="" src\n\ntargets:\n="" -="" name:="" build="" main.o\n="" command:="" \"{{="" cc="" }}="" -c="" {{="" src_dir="" main.c="" -o="" main.o\"\n="" sources:="" src="" main.c\n\ndefaults:\n="" main.o`)"="">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-yaml"><span class="token key atrule">netsuke_version</span><span class="token punctuation">:</span> <span class="token string">"1.0.0"</span>
+
+<span class="token key atrule">vars</span><span class="token punctuation">:</span>
+  <span class="token key atrule">cc</span><span class="token punctuation">:</span> gcc
+  <span class="token key atrule">src_dir</span><span class="token punctuation">:</span> src
+
+<span class="token key atrule">targets</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> build/main.o
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ cc }} -c {{ src_dir }}/main.c -o build/main.o"</span>
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span> src/main.c
+
+<span class="token key atrule">defaults</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> build/main.o</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="step-3-verify" class="mt-8">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-8 h-8 rounded-full bg-brand-cyan text-brand-dark flex items-center justify-center font-mono font-bold text-lg">3</div>
+                            <h3 class="font-mono text-2xl font-semibold">Verify</h3>
+                        </div>
+                        <p class="mt-4 text-gray-600 pl-12">Run Netsuke to build your targets.</p>
+                        <div class="mt-4 pl-12">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">Terminal Output</span>
+                                    <button class="copy-button" onclick="copyCode(this, 'netsuke\n\n[1/1] Compiling build/main.o\nBuild completed successfully!')">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-bash"><span class="token function">netsuke</span>
+
+<span class="token comment" style="color: rgb(8, 145, 178);">[1/1]</span> Compiling build/main.o
+<span class="token comment" style="color: rgb(8, 145, 178);">Build completed successfully!</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="netsukefile-structure" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">The Netsukefile Manifest</h2>
+                    <p class="mt-2 text-gray-600">The YAML file describing your entire build process with clear, structured sections.</p>
+                    
+                    <div class="mt-8">
+                        <h3 class="font-mono text-xl font-semibold">Top-Level Structure</h3>
+                        <div class="mt-4">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">Complete Netsukefile Example</span>
+                                    <button class="copy-button" onclick="copyCode(this, `# Mandatory: Specifies the manifest format version\nnetsuke_version: \" 1.0.0\"\n\n#="" optional:="" global="" variables="" accessible="" throughout\nvars:\n="" cc:="" gcc\n="" src_dir:="" src\n\n#="" reusable="" jinja="" macros\nmacros:\n="" -="" signature:="" \"compile_cmd(input,="" output)\"\n="" body:="" |\n="" {{="" cc="" }}="" -c="" input="" -o="" output="" }}\n\n#="" command="" templates\nrules:\n="" name:="" link\n="" command:="" \"{{="" ins="" outs="" }}\"\n\n#="" phony="" targets="" for="" setup="" or="" meta-tasks\nactions:\n="" clean\n="" \"rm="" -rf="" build="" *.o\"\n\n#="" required:="" defines="" the="" targets\ntargets:\n="" main.o\n="" compile_cmd('src="" main.c',="" 'build="" main.o')="" }}\"\n="" sources:="" src="" main.c\n\n="" my_app\n="" rule:="" main.o\n\n#="" default="" to="" build\ndefaults:\n="" my_app`)"="">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-yaml"><span class="token comment"># Mandatory: Specifies the manifest format version</span>
+<span class="token key atrule">netsuke_version</span><span class="token punctuation">:</span> <span class="token string">"1.0.0"</span>
+
+<span class="token comment"># Optional: Global variables accessible throughout</span>
+<span class="token key atrule">vars</span><span class="token punctuation">:</span>
+  <span class="token key atrule">cc</span><span class="token punctuation">:</span> gcc
+  <span class="token key atrule">src_dir</span><span class="token punctuation">:</span> src
+
+<span class="token comment"># Optional: Reusable Jinja macros</span>
+<span class="token key atrule">macros</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">signature</span><span class="token punctuation">:</span> <span class="token string">"compile_cmd(input, output)"</span>
+    <span class="token key atrule">body</span><span class="token punctuation">:</span> <span class="token punctuation">|</span>
+      <span class="token scalar string">{{ cc }} -c {{ input }} -o {{ output }}</span>
+
+<span class="token comment"># Optional: Reusable command templates</span>
+<span class="token key atrule">rules</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> link
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ cc }} {{ ins }} -o {{ outs }}"</span>
+
+<span class="token comment"># Optional: Phony targets for setup or meta-tasks</span>
+<span class="token key atrule">actions</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> clean
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"rm -rf build *.o"</span>
+
+<span class="token comment"># Required: Defines the build targets</span>
+<span class="token key atrule">targets</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> build/main.o
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ compile_cmd('src/main.c', 'build/main.o') }}"</span>
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span> src/main.c
+
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> my_app
+    <span class="token key atrule">rule</span><span class="token punctuation">:</span> link
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span> build/main.o
+
+<span class="token comment"># Optional: Default targets to build</span>
+<span class="token key atrule">defaults</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> my_app</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="defining-rules" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">Defining Rules</h2>
+                    <p class="mt-2 text-gray-600">Rules encapsulate reusable build commands and scripts for consistent execution.</p>
+                    
+                    <div class="mt-8">
+                        <div class="code-block">
+                            <div class="code-block-header">
+                                <span class="code-block-title">Rule Definition Example</span>
+                                <button class="copy-button" onclick="copyCode(this, `rules:\n  - name: compile\n    command: \" {{="" cc="" }}="" cflags="" -c="" ins="" -o="" outs="" }}\"\n="" description:="" \"compiling="" deps:="" gcc`)"="">
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span class="ml-1">Copy</span>
+                                </button>
+                            </div>
+                            <pre><code class="language-yaml"><span class="token key atrule">rules</span><span class="token punctuation">:</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> compile
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ cc }} {{ cflags }} -c {{ ins }} -o {{ outs }}"</span>
+    <span class="token key atrule">description</span><span class="token punctuation">:</span> <span class="token string">"Compiling {{ outs }}"</span>
+    <span class="token key atrule">deps</span><span class="token punctuation">:</span> gcc</code></pre>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 bg-brand-gray-100 p-6 rounded-lg">
+                        <h3 class="font-mono text-lg font-semibold text-brand-dark mb-4">Rule Components</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="font-semibold text-brand-dark">name</p>
+                                <p class="text-gray-600">Unique string identifier for the rule</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-brand-dark">command/script/rule</p>
+                                <p class="text-gray-600">The action to perform (mutually exclusive)</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-brand-dark">description</p>
+                                <p class="text-gray-600">User-friendly message during build</p>
+                            </div>
+                            <div>
+                                <p class="font-semibold text-brand-dark">deps</p>
+                                <p class="text-gray-600">Dependency file format (gcc or msvc)</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="targets-actions" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">Defining Targets and Actions</h2>
+                    <p class="mt-2 text-gray-600">Targets define what to build or what action to perform with flexible configuration options.</p>
+                    
+                    <div class="mt-8">
+                        <div class="code-block">
+                            <div class="code-block-header">
+                                <span class="code-block-title">Target Examples</span>
+                                <button class="copy-button" onclick="copyCode(this, `targets:\n  # Building an object file using a rule\n  - name: build/utils.o\n    rule: compile\n    sources: src/utils.c\n    deps:\n      - build/utils.h\n    vars:\n      cflags: \" -o0="" -g\"\n\n="" #="" linking="" executable="" with="" inline="" command\n="" -="" name:="" my_app\n="" command:="" \"{{="" cc="" }}="" build="" main.o="" utils.o="" -o="" my_app\"\n="" sources:\n="" main.o\n="" utils.o\n="" order_only_deps:\n="" build_directory\n\n="" phony="" action\n="" package\n="" phony:="" true\n="" \"tar="" czf="" package.tar.gz="" deps:="" my_app\n\n="" always-run="" target\n="" timestamp\n="" always:="" \"date=""> build/timestamp.txt\"`)"&gt;
+                                    <i class="fa-regular fa-copy"></i>
+                                    <span class="ml-1">Copy</span>
+                                </button>
+                            </div>
+                            <pre><code class="language-yaml"><span class="token key atrule">targets</span><span class="token punctuation">:</span>
+  <span class="token comment"># Building an object file using a rule</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> build/utils.o
+    <span class="token key atrule">rule</span><span class="token punctuation">:</span> compile
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span> src/utils.c
+    <span class="token key atrule">deps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> build/utils.h
+    <span class="token key atrule">vars</span><span class="token punctuation">:</span>
+      <span class="token key atrule">cflags</span><span class="token punctuation">:</span> <span class="token string">"-O0 -g"</span>
+
+  <span class="token comment"># Linking executable with inline command</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> my_app
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ cc }} build/main.o build/utils.o -o my_app"</span>
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> build/main.o
+      <span class="token punctuation">-</span> build/utils.o
+    <span class="token key atrule">order_only_deps</span><span class="token punctuation">:</span>
+      <span class="token punctuation">-</span> build_directory
+
+  <span class="token comment"># Phony action</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> package
+    <span class="token key atrule">phony</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"tar czf package.tar.gz my_app"</span>
+    <span class="token key atrule">deps</span><span class="token punctuation">:</span> my_app
+
+  <span class="token comment"># Always-run target</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> timestamp
+    <span class="token key atrule">always</span><span class="token punctuation">:</span> <span class="token boolean important">true</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"date &gt; build/timestamp.txt"</span></code></pre>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="jinja-templating" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">Jinja Templating in Netsuke</h2>
+                    <p class="mt-2 text-gray-600">Netsuke uses MiniJinja to add dynamic capabilities with safe, structured templating.</p>
+                    
+                    <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="font-mono text-lg font-semibold mb-4">Basic Syntax</h3>
+                            <div class="space-y-4">
+                                <div class="bg-brand-gray-100 p-4 rounded">
+                                    <p class="font-mono text-sm text-brand-dark">Variables:</p>
+                                    <code class="text-brand-cyan">{{ my_variable }}</code>
+                                </div>
+                                <div class="bg-brand-gray-100 p-4 rounded">
+                                    <p class="font-mono text-sm text-brand-dark">Expressions:</p>
+                                    <code class="text-brand-cyan">{{ 1 + 1 }}, {{ sources | map('basename') }}</code>
+                                </div>
+                                <div class="bg-brand-gray-100 p-4 rounded">
+                                    <p class="font-mono text-sm text-brand-dark">Control Structures:</p>
+                                    <code class="text-brand-cyan">{% if enable %}...{% endif %}</code>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 class="font-mono text-lg font-semibold mb-4">Processing Order</h3>
+                            <ol class="space-y-2 text-sm text-gray-600">
+                                <li><strong>1. Initial YAML Parse:</strong> Load raw file structure</li>
+                                <li><strong>2. Template Expansion:</strong> Evaluate <code>foreach</code>, <code>when</code></li>
+                                <li><strong>3. Deserialization:</strong> Convert to typed Rust structs</li>
+                                <li><strong>4. Final Rendering:</strong> Render Jinja in string fields</li>
+                            </ol>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <h3 class="font-mono text-lg font-semibold">Dynamic Target Generation</h3>
+                        <div class="mt-4">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">foreach and when Examples</span>
+                                    <button class="copy-button" onclick="copyCode(this, `targets:\n  # Generate a target for each .c file in src/\n  - foreach: glob('src/*.c')\n    name: \" build="" {{="" item="" |="" basename="" replace('.c',="" '.o')="" }}\"\n="" command:="" \"{{="" cc="" }}="" -c="" -o="" outs="" sources:="" when:="" !="exclude.c" }}\"`)"="">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-yaml"><span class="token key atrule">targets</span><span class="token punctuation">:</span>
+  <span class="token comment"># Generate a target for each .c file in src/</span>
+  <span class="token punctuation">-</span> <span class="token key atrule">foreach</span><span class="token punctuation">:</span> glob(<span class="token string">'src/*.c'</span>)
+    <span class="token key atrule">name</span><span class="token punctuation">:</span> <span class="token string">"build/{{ item | basename | replace('.c', '.o') }}"</span>
+    <span class="token key atrule">command</span><span class="token punctuation">:</span> <span class="token string">"{{ cc }} -c {{ item }} -o {{ outs }}"</span>
+    <span class="token key atrule">sources</span><span class="token punctuation">:</span> <span class="token string">"{{ item }}"</span>
+    <span class="token key atrule">when</span><span class="token punctuation">:</span> <span class="token string">"{{ item | basename != 'exclude.c' }}"</span></code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="border-t border-gray-200"></div>
+
+                <section id="ci-cd" class="py-12">
+                    <h2 class="font-mono text-3xl font-bold text-brand-dark">Testing &amp; CI Templates</h2>
+                    <p class="mt-2 text-gray-600">Drop these templates into your CI pipeline for immediate integration.</p>
+                    
+                    <div class="mt-8">
+                        <h3 class="font-mono text-xl font-semibold">GitHub Actions</h3>
+                        <p class="mt-2 text-gray-600">Create <code class="bg-gray-200 text-sm px-1 py-0.5 rounded font-mono">.github/workflows/ci.yml</code>.</p>
+                        <div class="mt-4">
+                            <div class="code-block">
+                                <div class="code-block-header">
+                                    <span class="code-block-title">ci.yml</span>
+                                    <button class="copy-button" onclick="copyCode(this, `name: CI\non: [push, pull_request]\n\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n    - uses: actions/checkout@v3\n    - name: Install Ninja\n      run: sudo apt-get install ninja-build\n    - name: Build Netsuke\n      run: cargo build --release\n    - name: Run Build\n      run: ./target/release/netsuke`)">
+                                        <i class="fa-regular fa-copy"></i>
+                                        <span class="ml-1">Copy</span>
+                                    </button>
+                                </div>
+                                <pre><code class="language-yaml"><span class="token key atrule">name</span><span class="token punctuation">:</span> CI
+<span class="token key atrule">on</span><span class="token punctuation">:</span> <span class="token punctuation">[</span>push<span class="token punctuation">,</span> pull_request<span class="token punctuation">]</span>
+
+<span class="token key atrule">jobs</span><span class="token punctuation">:</span>
+  <span class="token key atrule">build</span><span class="token punctuation">:</span>
+    <span class="token key atrule">runs-on</span><span class="token punctuation">:</span> ubuntu<span class="token punctuation">-</span>latest
+    <span class="token key atrule">steps</span><span class="token punctuation">:</span>
+    <span class="token punctuation">-</span> <span class="token key atrule">uses</span><span class="token punctuation">:</span> actions/checkout@v3
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Install Ninja
+      <span class="token key atrule">run</span><span class="token punctuation">:</span> sudo apt<span class="token punctuation">-</span>get install ninja<span class="token punctuation">-</span>build
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Build Netsuke
+      <span class="token key atrule">run</span><span class="token punctuation">:</span> cargo build <span class="token punctuation">--</span>release
+    <span class="token punctuation">-</span> <span class="token key atrule">name</span><span class="token punctuation">:</span> Run Build
+      <span class="token key atrule">run</span><span class="token punctuation">:</span> ./target/release/netsuke</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </article>
+        </div>
+    </div>
+
+    <footer id="footer" class="bg-white border-t border-gray-200 mt-16">
+        <div class="container mx-auto px-8 py-12">
+            <div class="flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+                <div class="mb-6 md:mb-0">
+                    <p class="font-mono font-bold text-lg">df12 Productions</p>
+                    <p class="text-gray-500 text-sm max-w-sm mt-2">
+                        Serious tools, playful worlds.
+                    </p>
+                </div>
+                <div class="font-mono text-sm text-gray-500">
+                    © 2025 df12 Productions. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</main>
+
+<script>
+    function copyCode(button, text) {
+        navigator.clipboard.writeText(text).then(function() {
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<i class="fa-solid fa-check"></i><span class="ml-1">Copied!</span>';
+            setTimeout(() => {
+                button.innerHTML = originalContent;
+            }, 2000);
+        }, function(err) {
+            console.error('Could not copy text: ', err);
+        });
+    }
+
+    // Smooth scrolling for sidebar links
+    document.querySelectorAll('#docs-sidebar a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            document.querySelector(this.getAttribute('href')).scrollIntoView({
+                behavior: 'smooth'
+            });
+        });
+    });
+</script>
+
+</body></html>

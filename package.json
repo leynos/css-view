@@ -1,0 +1,24 @@
+{
+	"name": "css-view",
+	"version": "0.1.0",
+	"description": "Capture computed CSS snapshots for any page via Playwright + Bun",
+	"type": "module",
+	"license": "ISC",
+	"bin": {
+		"css-view": "./bin/css-view.ts"
+	},
+	"scripts": {
+		"start": "bun run bin/css-view.ts",
+		"test": "bun test",
+		"lint": "bunx @biomejs/biome check .",
+		"fmt": "bunx @biomejs/biome format --write .",
+		"postinstall": "bunx playwright install chromium firefox webkit"
+	},
+	"dependencies": {
+		"commander": "^11.1.0",
+		"playwright": "^1.48.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.2"
+	}
+}

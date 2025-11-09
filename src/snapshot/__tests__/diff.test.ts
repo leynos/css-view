@@ -45,4 +45,34 @@ describe("computeStyleDiff", () => {
 
     expect(diff).toEqual({ color: "rgb(12, 34, 56)" });
   });
+
+  it("omits custom properties when they match the parent", () => {
+    const diff = computeStyleDiff({
+      current: { "--brand-color": "red", color: "rgb(12, 34, 56)" },
+      parent: { "--brand-color": "red", color: "rgb(0, 0, 0)" },
+      uaDefaults: { color: "rgb(0, 0, 0)" },
+      inherited,
+    });
+
+    expect(diff).toEqual({ color: "rgb(12, 34, 56)" });
+  });
+
+  it("includes custom properties when the parent differs or is absent", () => {
+    const diffWithParent = computeStyleDiff({
+      current: { "--brand-color": "red" },
+      parent: { "--brand-color": "blue" },
+      uaDefaults: {},
+      inherited,
+    });
+
+    expect(diffWithParent).toEqual({ "--brand-color": "red" });
+
+    const diffWithoutParent = computeStyleDiff({
+      current: { "--brand-color": "red" },
+      uaDefaults: {},
+      inherited,
+    });
+
+    expect(diffWithoutParent).toEqual({ "--brand-color": "red" });
+  });
 });

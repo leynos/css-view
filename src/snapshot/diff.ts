@@ -21,11 +21,16 @@ export function computeStyleDiff({
   for (const [property, value] of Object.entries(current)) {
     if (value == null) continue;
     const isInherited = inherited.has(property);
-    const baseline = isInherited
-      ? (parent?.[property] ?? uaDefaults[property])
-      : uaDefaults[property];
+    const isCustomProperty = property.startsWith("--");
+    const baseline = (() => {
+      if (isCustomProperty) return parent?.[property];
+      if (isInherited) return parent?.[property] ?? uaDefaults[property];
+      return uaDefaults[property];
+    })();
 
-    if (baseline === undefined || value !== baseline) {
+    if (baseline === undefined) {
+      diff[property] = value;
+    } else if (value !== baseline) {
       diff[property] = value;
     }
   }

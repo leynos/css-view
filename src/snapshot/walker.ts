@@ -91,6 +91,14 @@ const walkerEvaluator = ({
 
     for (const [property, value] of Object.entries(computed)) {
       if (value == null) continue;
+      if (property.startsWith("--")) {
+        const baseline = parentComputed?.[property];
+        if (baseline === undefined || baseline !== value) {
+          diffs[property] = value;
+        }
+        continue;
+      }
+
       if (inherited.has(property)) {
         const baseline = parentComputed?.[property] ?? defaults[property];
         if (baseline === undefined || baseline !== value) {

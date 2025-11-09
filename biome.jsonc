@@ -1,0 +1,68 @@
+{
+  "$schema": "https://biomejs.dev/schemas/stable/schema.json",
+  "files": {
+    "include": [
+      "biome.jsonc",
+      "bunfig.toml",
+      "package.json",
+      "tsconfig.json",
+      "bin/**/*.ts",
+      "src/**/*.ts",
+      "scripts/**/*.ts",
+      "docs/**/*.md"
+    ],
+    "ignoreUnknown": true
+  },
+  "vcs": {
+    "useIgnoreFile": true
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "jsxRuntime": "transparent",
+    "formatter": {
+      "indentStyle": "space",
+      "indentWidth": 2,
+      "bracketSpacing": true,
+      "jsxQuoteStyle": "double",
+      "quoteStyle": "double",
+      "semicolons": "always",
+      "trailingCommas": "all"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noConsole": "off"
+      },
+      "style": {
+        "useForOf": "error"
+      }
+    }
+  },
+  "overrides": [
+    {
+      "include": ["**/*.d.ts"],
+      "formatter": {
+        "enabled": false
+      },
+      "linter": {
+        "enabled": false
+      }
+    },
+    {
+      "include": ["**/*.md"],
+      "formatter": {
+        "indentStyle": "space",
+        "indentWidth": 2,
+        "lineWidth": 80
+      }
+    }
+  ]
+}

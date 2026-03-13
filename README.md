@@ -17,30 +17,26 @@ bun run bin/css-view.ts https://example.org --mode walker --pretty
 To expose `css-view` system-wide, run:
 
 ```bash
-bun install -g .
+npm install -g .
 ```
 
-Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
-`PATH`, because that is where Bun places the linked executable. The
-`postinstall` script automatically downloads the Chromium, Firefox, and WebKit
-Playwright browsers so the command works immediately after the global install.
+This project still requires Bun at runtime: the generated `css-view` executable
+uses `bun run`, and the package `postinstall` hook invokes `bunx playwright
+install chromium firefox webkit`.
+
+`bun install -g .` and `bun add -g .` currently fail with a Bun
+`DependencyLoop` error on Bun 1.3.8 when installing this local checkout, so use
+`npm install -g` for local global installs.
 
 When installing from a packaged tarball (for example a release artefact), Bun
 needs an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+npm install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
-Run `scripts/install.sh` from the repository root to pack the project and run
-the absolute-path install automatically. The script also prints guidance for
-trusting the package if Bun blocks the `postinstall` hook. To manually trust a
-blocked global install run:
-
-```bash
-bun pm -g trust css-view
-bun pm -g run postinstall css-view
-```
+Run `scripts/install.sh` from the repository root to perform the global
+installation automatically.
 
 Full installation, configuration, and troubleshooting steps are covered in
 [docs/users-guide.md](docs/users-guide.md).

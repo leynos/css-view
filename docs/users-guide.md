@@ -39,29 +39,25 @@ packages flagged in the warning before attempting a capture run.
 You can expose the CLI globally with:
 
 ```bash
-bun install -g .
+npm install -g .
 ```
 
-Add the Bun binary directory (`~/.bun/bin` by default) to your `PATH`, so the
-`css-view` command resolves everywhere. The package `postinstall` hook runs
-`playwright install chromium firefox webkit` automatically to ensure browser
-binaries exist after the global install.
+This package still depends on Bun after installation: the executable runs via
+`bun run`, and the package `postinstall` hook invokes `bunx playwright install
+chromium firefox webkit`.
+
+Local global installs with `bun install -g .` and `bun add -g .` currently fail
+on Bun 1.3.8 with a `DependencyLoop` error in this repository, so use
+`npm install -g` for local checkouts.
 
 If you install from a packaged tarball, provide an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+npm install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
-The helper script `scripts/install.sh` packs the project, resolves the
-absolute archive path, and invokes the global install for you. Bun may block
-the `postinstall` hook on untrusted packages; inspect the queue with
-`bun pm -g untrusted`, then trust and rerun the hook:
-
-```bash
-bun pm -g trust css-view
-bun pm -g run postinstall css-view
-```
+The helper script `scripts/install.sh` runs the global install for you from the
+repository root.
 
 ## Running snapshots
 

@@ -12,31 +12,30 @@ BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium firefox webkit
 bun run bin/css-view.ts https://example.org --mode walker --pretty
 ```
 
-### Global install
+### Local Bun install
 
 To expose `css-view` system-wide, run:
 
 ```bash
-npm install -g .
+bun link
 ```
 
-This project still requires Bun at runtime: the generated `css-view` executable
-uses `bun run`, and the package `postinstall` hook invokes `bunx playwright
-install chromium firefox webkit`.
+This registers the checkout with Bun and creates the `css-view` executable in
+`~/.bun/bin`. Ensure that directory is on your `PATH`.
 
 `bun install -g .` and `bun add -g .` currently fail with a Bun
 `DependencyLoop` error on Bun 1.3.8 when installing this local checkout, so use
-`npm install -g` for local global installs.
+`bun link` instead for Bun-native local installs.
 
-When installing from a packaged tarball (for example a release artefact), Bun
-needs an absolute path:
+If you want Bun to relink the checkout automatically, run:
 
 ```bash
-npm install -g "$(pwd)/css-view-0.1.0.tgz"
+bash scripts/install.sh
 ```
 
-Run `scripts/install.sh` from the repository root to perform the global
-installation automatically.
+Tarball-based global installs via Bun are not documented here because
+`bun add -g <local-tarball>` hits the same `DependencyLoop` failure on Bun
+1.3.8 in this repository.
 
 Full installation, configuration, and troubleshooting steps are covered in
 [docs/users-guide.md](docs/users-guide.md).

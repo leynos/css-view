@@ -9,17 +9,11 @@ if ! command -v bun >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! command -v npm >/dev/null 2>&1; then
-  echo "\n[npm missing] Please install npm before running this script." >&2
+echo "Linking css-view from ${ROOT_DIR}..."
+if ! bun link; then
+  echo "bun link failed" >&2
   exit 1
 fi
 
-echo "Installing css-view globally from ${ROOT_DIR}..."
-if ! npm install -g "$ROOT_DIR"; then
-  echo "Global install failed" >&2
-  exit 1
-fi
-
-echo "\ncss-view linked globally."
-echo "Ensure your global npm bin directory is on your PATH so \`css-view\` resolves."
-echo "The installed command still requires Bun at runtime because it uses \`bun run\`."
+echo "\ncss-view linked via Bun."
+echo "Ensure ~/.bun/bin is on your PATH so \`css-view\` resolves."

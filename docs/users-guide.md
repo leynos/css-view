@@ -74,6 +74,11 @@ Common options include:
 - `--props` or `--props-file` to override the computed-style whitelist.
 - `--inherited` or `--inherited-file` (walker only) to override inheritance
   comparisons.
+- `--viewport-width` / `--viewport-height` to capture with a specific browser
+  viewport. If you set only one dimension, the other uses Playwright's default
+  `1280x720` value.
+- `--display-pixel-resolution` to override the browser device scale factor with
+  a whole-number DPR.
 - `--wait-until` to pick the navigation lifecycle (`load`,
   `domcontentloaded`, or `networkidle`).
 - `--output` to write JSON to a file rather than standard output.

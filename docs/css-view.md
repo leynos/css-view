@@ -50,6 +50,9 @@ Common examples:
 | `--browser <chromium|firefox|webkit>` | Override the browser engine. CDP mode always forces `chromium`. |
 | `--props`, `--props-file` | Override the computed-style whitelist. Accepts comma or newline separated values. |
 | `--inherited`, `--inherited-file` | Walker-only overrides for the inherited-property set used when diffing. |
+| `-W`, `--viewport-width <px>` | Override the browser viewport width in CSS pixels. If `--viewport-height` is omitted, Playwright's default height (`720`) is used. |
+| `-H`, `--viewport-height <px>` | Override the browser viewport height in CSS pixels. If `--viewport-width` is omitted, Playwright's default width (`1280`) is used. |
+| `-R`, `--display-pixel-resolution <dpr>` | Override the browser device scale factor with a whole-number display pixel ratio. |
 | `--max-nodes <n>` | Walker-only guard to stop after visiting `n` elements (default 2000). |
 | `--text-clip <n>` | Walker-only text truncation length (default 160 chars). |
 | `--wait-until <state>` | Navigation lifecycle wait (`load`, `domcontentloaded`, `networkidle`). Default `networkidle`. |
@@ -70,16 +73,24 @@ All runs include metadata:
   "browser": "firefox",
   "waitUntil": "networkidle",
   "headless": true,
+  "viewport": null,
+  "displayPixelResolution": null,
   "payload": { "mode": "walker", ... }
 }
 ```
 
+- `viewport` records the effective override applied via `-W/--viewport-width`
+  and `-H/--viewport-height`. It is `null` when Playwright defaults are used.
+- `displayPixelResolution` records the whole-number DPR override applied via
+  `-R/--display-pixel-resolution`. It is `null` when Playwright defaults are
+  used.
 - CDP payloads contain `nodes[]`, where each node stores attributes, children indexes, computed values (matching the `--props` list), and bounding boxes.
 - Walker payloads contain a tree rooted at `<html>`, where each node exposes `styleDiff` (only differences vs parent/defaults), trimmed text, and bounding boxes.
 
 ## Dev workflow
 
 - Unit tests (`bun test`) cover diff/inheritance helpers and the option resolvers.
+- Type-check the CLI and snapshot modules with `bun run typecheck`.
 - `bun run lint` executes Biome's lint + organize-imports checks.
 - `bun run fmt` formats the repo (`@biomejs/biome format --write .`).
 

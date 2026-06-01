@@ -5,7 +5,7 @@ This ExecPlan (execution plan) is a living document. The sections
 `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work
 proceeds.
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 ## Purpose / big picture
 
@@ -360,8 +360,9 @@ The final completion audit must prove every explicit requirement:
   `bunx tsc --noEmit`.
 - [x] 2026-06-01: Ran a real `agent-browser --session css-view-cdp-smoke`
   smoke test with `agent-browser get cdp-url` and `css-view --cdp-url`.
-- [ ] Run the final completion audit and mark the thread goal complete only if
-  all evidence proves completion.
+- [x] 2026-06-01: Ran the final completion audit; current evidence proves
+  every requested deliverable is present and validated.
+- [x] 2026-06-01: Prepared to mark the thread goal complete.
 
 ## Surprises & Discoveries
 

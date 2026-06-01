@@ -72,6 +72,8 @@ bun run bin/css-view.ts <url> --mode <cdp|walker> [options]
 Common options include:
 
 - `--props` or `--props-file` to override the computed-style whitelist.
+- `--cdp-url` to attach CDP mode to an existing Chromium debugging endpoint
+  instead of launching a new browser.
 - `--inherited` or `--inherited-file` (walker only) to override inheritance
   comparisons.
 - `--wait-until` to pick the navigation lifecycle (`load`,
@@ -81,10 +83,80 @@ Common options include:
 
 Refer to `docs/css-view.md` for the full option matrix and payload schema.
 
+## Hello World
+
+The repository includes a tiny fixture page at `tests/fixtures/hello-css`.
+Start it with `http-server`:
+
+```bash
+PORT=4173
+bunx http-server tests/fixtures/hello-css -p "$PORT" -a 127.0.0.1 -c-1
+```
+
+Then capture a CDP snapshot:
+
+```bash
+bun run bin/css-view.ts "http://127.0.0.1:${PORT}/index.html" \
+  --mode cdp \
+  --props color,font-size,background-color,display \
+  --wait-until load \
+  --pretty
+```
+
+The response is JSON. The top-level metadata identifies the capture mode,
+browser, URL, and wait policy. The CDP payload contains `nodes[]`; the fixture
+heading appears as the node with `attributes.id` set to `title`, and its text
+appears in a child text node. The heading's computed styles include
+`color: rgb(34, 34, 136)` and `font-size: 32px`.
+
+## Agent-browser bridge
+
+`agent-browser` is useful for driving a page through login flows, clicks,
+forms, and navigation. `css-view` can then attach to that same browser session
+and capture computed CSS from the page state the agent already reached.
+
+Use `agent-browser get cdp-url` to obtain the Chromium DevTools Protocol
+endpoint:
+
+```bash
+agent-browser open "http://127.0.0.1:${PORT}/index.html"
+CDP_URL="$(agent-browser get cdp-url)"
+bun run bin/css-view.ts "http://127.0.0.1:${PORT}/index.html" \
+  --mode cdp \
+  --cdp-url "$CDP_URL" \
+  --props color,font-size,background-color,display \
+  --wait-until load \
+  --pretty
+```
+
+`--cdp-url` accepts browser-level CDP endpoints in these forms:
+
+- `http://127.0.0.1:9222/`
+- `https://browser-provider.example/session`
+- `ws://127.0.0.1:9222/devtools/browser/<id>`
+- `wss://browser-provider.example/devtools/browser/<id>`
+
+When `--cdp-url` is present, `css-view` uses CDP mode and Chromium semantics.
+The positional `<url>` remains the page to inspect. If an existing page in the
+CDP session already has that URL, `css-view` snapshots it. Otherwise it uses an
+available page or creates one, navigates it to the requested URL, waits for the
+requested lifecycle event, and then captures the DOM snapshot.
+
+Do not pass untrusted CDP URLs. A CDP endpoint can control the browser, inspect
+page content, and interact with authenticated sessions. Keep local debugging
+ports bound to loopback interfaces and treat provider-issued WebSocket URLs as
+secrets.
+
 ## Troubleshooting
 
 - **Browser download warnings:** Install the missing system libraries named in
   the Playwright warning banner, then re-run `bunx playwright install ...`.
+- **CDP connection failures:** Confirm that `agent-browser get cdp-url` still
+  returns a live endpoint and that no firewall or provider policy blocks the
+  WebSocket connection.
+- **Invalid bridge option combinations:** `--cdp-url` requires `--mode cdp`.
+  It cannot be combined with `--browser`, because the CDP endpoint already
+  selects the browser.
 - **Navigation timeouts:** Adjust `--timeout` or use `--wait-until load` for
   pages with continuous network chatter.
 - **Large pages:** Use `--max-nodes` (walker) or pare down the property list to

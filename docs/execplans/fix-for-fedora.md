@@ -348,9 +348,14 @@ The final completion audit must prove every explicit requirement:
   local and CDP target lifecycle rules.
 - [x] 2026-06-01: Implemented Milestone 3 with the `--cdp-url` CLI option and
   behavioural CLI coverage for help output and invalid option combinations.
-- [ ] Gate and commit Milestones 2 and 3.
-- [ ] Implement Milestone 4 and commit after gates.
-- [ ] Implement Milestone 5 and commit after gates.
+- [x] 2026-06-01: Gated and committed Milestones 2 and 3.
+- [x] 2026-06-01: Implemented Milestone 4 with a trivial Hello World CSS
+  fixture, `bunx http-server` fixture serving on a random available port,
+  canonicalized snapshot coverage, and a real external CDP e2e test.
+- [x] 2026-06-01: Implemented Milestone 5 with README Hello World guidance,
+  detailed `docs/users-guide.md` bridge instructions, `docs/css-view.md`
+  option updates, and a new `docs/developers-guide.md` testing strategy.
+- [ ] Gate and commit Milestones 4 and 5.
 - [ ] Run the final completion audit and mark the thread goal complete only if
   all evidence proves completion.
 
@@ -369,6 +374,13 @@ The final completion audit must prove every explicit requirement:
   Playwright 1.48 names the DOM snapshot return type
   `captureSnapshotReturnValue`, and the supported text-colour option is
   `includeTextColorOpacities`.
+- In this Bun runtime, Playwright's `chromium.connectOverCDP()` timed out
+  during the WebSocket handshake against both Playwright-launched and raw
+  Chromium CDP endpoints. A direct Bun WebSocket CDP client proved the bridge
+  path and now owns external `--cdp-url` captures.
+- `http-server -p 0` did not expose an OS-selected random port in version
+  14.1.1. The test harness reserves a random loopback port first, then starts
+  `bunx http-server` on that port.
 
 ## Decision Log
 
@@ -391,6 +403,12 @@ The final completion audit must prove every explicit requirement:
   this plan.
   Rationale: The user resumed the active thread goal after the draft plan and
   asked to continue working toward the requested end state.
+- Decision: Use a direct Bun WebSocket CDP client for external `--cdp-url`
+  captures instead of Playwright `connectOverCDP()`.
+  Rationale: The Playwright CDP attach path repeatedly timed out under Bun in
+  this repository, while direct CDP calls to `Target.*`, `Page.*`, and
+  `DOMSnapshot.captureSnapshot` satisfy the requested bridge and are covered by
+  e2e tests.
 
 ## Outcomes & Retrospective
 

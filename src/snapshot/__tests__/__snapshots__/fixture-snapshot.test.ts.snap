@@ -1,0 +1,56 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`fixture-backed snapshots captures a stable walker snapshot subset for the Hello World fixture 1`] = `
+{
+  "browser": "chromium",
+  "card": {
+    "background": "rgb(255, 255, 255)",
+    "borderTopWidth": "2px",
+    "classes": [
+      "card",
+    ],
+    "tag": "main",
+  },
+  "mode": "walker",
+  "payloadMode": "walker",
+  "title": {
+    "classes": [
+      "hero",
+    ],
+    "color": "rgb(34, 34, 136)",
+    "fontSize": "32px",
+    "id": "title",
+    "tag": "h1",
+    "text": "Hello World",
+  },
+}
+`;
+
+exports[`fixture-backed snapshots captures a stable CDP snapshot subset for the Hello World fixture 1`] = `
+{
+  "browser": "chromium",
+  "card": {
+    "backgroundColor": "rgb(255, 255, 255)",
+    "className": "card",
+    "display": "block",
+    "tagName": "main",
+  },
+  "computedProperties": [
+    "color",
+    "font-size",
+    "background-color",
+    "margin-top",
+    "display",
+  ],
+  "mode": "cdp",
+  "payloadMode": "cdp",
+  "title": {
+    "className": "hero",
+    "color": "rgb(34, 34, 136)",
+    "fontSize": "32px",
+    "id": "title",
+    "layoutText": "Hello World",
+    "tagName": "h1",
+  },
+}
+`;

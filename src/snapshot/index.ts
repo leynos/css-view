@@ -7,7 +7,7 @@ import {
   firefox,
   webkit,
 } from "playwright";
-import { type CdpSnapshotResult, captureWithCdp } from "./cdp";
+import { type CdpSnapshotResult, captureWithCdp, captureWithCdpEndpoint } from "./cdp";
 import { type WalkerSnapshotResult, captureWithWalker } from "./walker";
 
 export type SnapshotMode = "cdp" | "walker";
@@ -226,6 +226,30 @@ export async function openSnapshotTarget<
 
 export async function captureSnapshot(options: SnapshotOptions): Promise<SnapshotExecutionResult> {
   const plan = resolveSnapshotPlan(options);
+
+  if (plan.browserSource === "cdp-url") {
+    if (!plan.cdpUrl) {
+      throw new Error("CDP endpoint URL is required for CDP URL snapshots");
+    }
+
+    const payload = await captureWithCdpEndpoint({
+      cdpUrl: plan.cdpUrl,
+      url: options.url,
+      waitUntil: plan.waitUntil,
+      timeoutMs: plan.timeoutMs,
+      properties: options.properties,
+    });
+
+    return {
+      url: options.url,
+      capturedAt: new Date().toISOString(),
+      mode: options.mode,
+      browser: plan.browser,
+      waitUntil: plan.waitUntil,
+      headless: plan.headless,
+      payload,
+    };
+  }
 
   const browserType = browserMap[plan.browser];
   const target = await openSnapshotTarget<Page, BrowserContext, Browser>({

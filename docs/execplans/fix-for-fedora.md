@@ -342,9 +342,13 @@ The final completion audit must prove every explicit requirement:
 - [x] 2026-06-01: Implemented Milestone 1 with
   `resolveSnapshotPlan()` and unit coverage for local defaults, accepted CDP
   endpoint schemes, and invalid option combinations.
-- [ ] Gate and commit Milestone 1.
-- [ ] Implement Milestone 2 and commit after gates.
-- [ ] Implement Milestone 3 and commit after gates.
+- [x] 2026-06-01: Gated and committed Milestone 1.
+- [x] 2026-06-01: Implemented Milestone 2 with `openSnapshotTarget()`,
+  external CDP attachment, deterministic page selection, and unit coverage for
+  local and CDP target lifecycle rules.
+- [x] 2026-06-01: Implemented Milestone 3 with the `--cdp-url` CLI option and
+  behavioural CLI coverage for help output and invalid option combinations.
+- [ ] Gate and commit Milestones 2 and 3.
 - [ ] Implement Milestone 4 and commit after gates.
 - [ ] Implement Milestone 5 and commit after gates.
 - [ ] Run the final completion audit and mark the thread goal complete only if

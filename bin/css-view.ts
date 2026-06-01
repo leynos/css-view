@@ -30,6 +30,7 @@ async function main() {
     .addOption(new Option("-b, --browser <browser>", "Playwright browser engine"))
     .option("--props <list>", "Comma or newline separated list of computed CSS properties")
     .option("--props-file <path>", "File with computed CSS properties, one per line")
+    .option("--cdp-url <url>", "Attach to an existing Chromium CDP endpoint")
     .option("--inherited <list>", "Walker-only: override inherited property list")
     .option("--inherited-file <path>", "Walker-only: provide inherited props via file")
     .option("--max-nodes <n>", "Walker-only: limit nodes visited", (value) =>
@@ -75,6 +76,7 @@ async function main() {
     url,
     mode,
     browser: opts.browser,
+    cdpUrl: opts.cdpUrl,
     headless: !opts.headful,
     waitUntil: opts.waitUntil,
     timeoutMs: opts.timeout,

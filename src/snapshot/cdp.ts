@@ -41,8 +41,8 @@ export async function captureWithCdp(
     includePaintOrder: true,
     includeDOMRects: true,
     includeBlendedBackgroundColors: true,
-    includeTextColor: true,
-  })) as Protocol.DOMSnapshot.CaptureSnapshotReturnValue;
+    includeTextColorOpacities: true,
+  })) as Protocol.DOMSnapshot.captureSnapshotReturnValue;
 
   const strings = response.strings ?? [];
   const doc = response.documents[0];

@@ -339,7 +339,10 @@ The final completion audit must prove every explicit requirement:
 - [x] 2026-06-01: Drafted this ExecPlan.
 - [x] 2026-06-01: Treated the user's continuation request as approval to
   execute this plan.
-- [ ] Implement Milestone 1 and commit after gates.
+- [x] 2026-06-01: Implemented Milestone 1 with
+  `resolveSnapshotPlan()` and unit coverage for local defaults, accepted CDP
+  endpoint schemes, and invalid option combinations.
+- [ ] Gate and commit Milestone 1.
 - [ ] Implement Milestone 2 and commit after gates.
 - [ ] Implement Milestone 3 and commit after gates.
 - [ ] Implement Milestone 4 and commit after gates.
@@ -358,6 +361,10 @@ The final completion audit must prove every explicit requirement:
 - Playwright documents CDP attachment as accepting both HTTP debugging URLs and
   WebSocket endpoints, so `--cdp-url` should not be limited to only
   `ws://`/`wss://` forms.
+- Explicit `bunx tsc --noEmit` exposed pre-existing CDP typing drift:
+  Playwright 1.48 names the DOM snapshot return type
+  `captureSnapshotReturnValue`, and the supported text-colour option is
+  `includeTextColorOpacities`.
 
 ## Decision Log
 

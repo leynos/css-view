@@ -530,6 +530,9 @@ The final completion audit must prove every explicit requirement:
   unit coverage for command construction and failures.
 - [x] 2026-06-01: Gated Milestone 7 with `bun run lint`, `bun run test`, and
   `bunx tsc --noEmit`.
+- [ ] 2026-06-01: Request CodeRabbit review for Milestone 7. The first attempt
+  reached `awaiting_browser_auth` and was stopped after it remained blocked on
+  interactive authentication rather than a rate limit.
 
 ## Surprises & Discoveries
 
@@ -553,6 +556,9 @@ The final completion audit must prove every explicit requirement:
 - `http-server -p 0` did not expose an OS-selected random port in version
   14.1.1. The test harness reserves a random loopback port first, then starts
   `bunx http-server` on that port.
+- `coderabbit review --agent` completed for the phase 2 plan milestone, but the
+  next invocation for Milestone 7 requested browser authentication and did not
+  reach review analysis.
 
 ## Decision Log
 

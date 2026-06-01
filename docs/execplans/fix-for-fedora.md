@@ -355,7 +355,11 @@ The final completion audit must prove every explicit requirement:
 - [x] 2026-06-01: Implemented Milestone 5 with README Hello World guidance,
   detailed `docs/users-guide.md` bridge instructions, `docs/css-view.md`
   option updates, and a new `docs/developers-guide.md` testing strategy.
-- [ ] Gate and commit Milestones 4 and 5.
+- [x] 2026-06-01: Gated and committed Milestones 4 and 5.
+- [x] 2026-06-01: Ran final gates: `bun run lint`, `bun run test`, and
+  `bunx tsc --noEmit`.
+- [x] 2026-06-01: Ran a real `agent-browser --session css-view-cdp-smoke`
+  smoke test with `agent-browser get cdp-url` and `css-view --cdp-url`.
 - [ ] Run the final completion audit and mark the thread goal complete only if
   all evidence proves completion.
 
@@ -412,5 +416,22 @@ The final completion audit must prove every explicit requirement:
 
 ## Outcomes & Retrospective
 
-No implementation has been attempted yet. This section must be updated after
-each implementation milestone and again after the final validation audit.
+Implemented the `agent-browser` bridge as `--cdp-url` for CDP mode. The first
+implementation attempted to use Playwright's `chromium.connectOverCDP()`, but
+that path repeatedly timed out under Bun during WebSocket connection. The final
+implementation keeps Playwright for local browser launches and uses a direct
+Bun WebSocket CDP client for external endpoints. That client resolves HTTP(S)
+debugging endpoints through `/json/version`, accepts WS(S) browser endpoints
+directly, selects an existing page at the requested URL when present, and calls
+`DOMSnapshot.captureSnapshot`.
+
+The test suite now covers pure option planning, fake browser target selection,
+CLI behaviour, fixture-backed snapshot contracts, and end-to-end external CDP
+capture. The e2e test starts a trivial CSS fixture with `bunx http-server` on
+a random available loopback port and launches Chromium with a real CDP
+debugging port.
+
+Documentation now includes a README Hello World flow, detailed user guidance
+for `agent-browser get cdp-url`, the `--cdp-url` option in the CLI reference,
+and a developer guide that explains unit, behavioural, snapshot, and e2e test
+strategy.

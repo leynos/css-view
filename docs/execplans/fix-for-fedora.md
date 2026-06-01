@@ -5,9 +5,44 @@ This ExecPlan (execution plan) is a living document. The sections
 `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work
 proceeds.
 
-Status: COMPLETE
+Status: IN PROGRESS
 
 ## Purpose / big picture
+
+Phase 2 extends the completed CDP URL bridge into the default reliable install
+path for Fedora and Rocky. The next user-visible behaviour is that `css-view`
+prefers `agent-browser` as its browser backend when the `agent-browser` binary
+is available on `PATH`, falls back to the Playwright backend when it is not,
+and keeps direct `--cdp-url` attachment as the core implementation for an
+already-known CDP endpoint.
+
+After this phase, users can install `css-view` without downloading every
+Playwright browser during package `postinstall`. On Fedora and Rocky the
+recommended path is to let `agent-browser` own Chromium installation,
+launching, and session reuse, while `css-view` shells out to
+`agent-browser --session <name> open <url>` and
+`agent-browser --session <name> get cdp-url`, then captures through the direct
+CDP bridge. Users who want the original local browser behaviour can still pass
+`--backend playwright`; users who already have a CDP endpoint can still pass
+`--cdp-url`.
+
+The phase 2 success condition is a clean install-oriented interface:
+
+```bash
+css-view https://example.org --pretty
+css-view https://example.org --backend agent-browser --agent-browser-session css-view --pretty
+css-view --backend agent-browser --agent-browser-session css-view --use-current-page --pretty
+css-view https://example.org --backend playwright --mode walker --pretty
+```
+
+The first command uses `agent-browser` by default when available and otherwise
+uses the Playwright backend. The second command makes the agent-browser backend
+explicit. The third command snapshots the page already active in the named
+agent-browser session without navigating. The fourth command preserves the
+existing local Playwright walker path.
+
+Phase 1, retained below for continuity, added the lower-level `--cdp-url`
+bridge:
 
 `css-view` can already launch its own Playwright browser and capture computed
 CSS snapshots with either the Chromium DevTools Protocol (CDP) or an in-page
@@ -50,8 +85,13 @@ metadata and CDP payload shape used by local CDP mode, and does not require
   must clean up only the child processes they start.
 - Run gates sequentially. Do not run format, lint, typecheck, or tests in
   parallel.
-- Commit each validated logical change. The plan itself is one documentation
-  change and should be committed only after its available gate passes.
+- Commit each validated logical change. Gate each commit before committing.
+- For each major milestone, run all applicable deterministic quality and
+  correctness gates before requesting `coderabbit review --agent`. Treat
+  CodeRabbit findings as review requirements: verify them against the live
+  tree, fix all actionable concerns, rerun applicable gates, and only then move
+  to the next milestone. If CodeRabbit is rate limited, sleep for
+  `$(shuf -i 15-30 -n 1)` minutes before retrying.
 
 ## Tolerances (exception triggers)
 
@@ -97,6 +137,17 @@ metadata and CDP payload shape used by local CDP mode, and does not require
   Severity: high. Likelihood: high. Mitigation: document that users should only
   pass trusted local or provider-issued CDP URLs and should avoid exposing CDP
   ports to untrusted networks.
+- Risk: A default `agent-browser` backend can surprise existing users who rely
+  on local walker output as the default.
+  Severity: medium. Likelihood: medium. Mitigation: keep
+  `--backend playwright --mode walker` intact, document the backend precedence,
+  and add CLI tests that prove fallback to Playwright when `agent-browser` is
+  unavailable.
+- Risk: Shelling out to `agent-browser` can make failures less structured than
+  direct library calls.
+  Severity: medium. Likelihood: high. Mitigation: isolate command execution in
+  an `AgentBrowserBackend` module with injectable runners and clear stderr-rich
+  error messages.
 
 ## Research and prior art
 
@@ -104,6 +155,10 @@ Firecrawl was used to refresh external facts on 2026-06-01. The current
 `agent-browser` command reference documents:
 
 - `agent-browser get cdp-url` as the command that returns a CDP WebSocket URL.
+- `agent-browser --session <name>` as the session selection flag.
+- `agent-browser open <url>` as the navigation command.
+- `agent-browser get url` as the command that returns the active page URL.
+- `agent-browser close` as the command that closes a browser session.
 - `agent-browser --cdp <value>` and `AGENT_BROWSER_CDP` as ways for
   `agent-browser` itself to connect to a CDP port or WebSocket URL.
 - A persistent daemon/browser model where the browser can outlive individual
@@ -148,6 +203,100 @@ The current code path is small:
 - `docs/developers-guide.md` does not exist yet.
 
 ## Implementation plan
+
+### Milestone 6: Plan and review the backend switch
+
+Reopen this ExecPlan for phase 2 and use a Wyvern agent team for read-only
+planning assistance:
+
+- One agent reviews code integration points and validation rules.
+- One agent reviews install, docs, and package implications.
+- Firecrawl refreshes `agent-browser` command syntax for session selection,
+  navigation, CDP URL retrieval, active URL retrieval, and close semantics.
+
+The plan update itself is a documentation-only milestone. Gate it with the
+Markdown/documentation checks available in this repository, commit it, then run
+`coderabbit review --agent`. Clear all actionable CodeRabbit concerns before
+changing implementation files.
+
+### Milestone 7: Add a testable agent-browser backend adapter
+
+Add an internal module that shells out to `agent-browser` through an injectable
+command runner. The module should:
+
+- Detect whether `agent-browser` is available on `PATH` without throwing
+  uncaught process-spawn errors.
+- Use `agent-browser --session <name> open <url>` for navigation.
+- Use `agent-browser --session <name> get cdp-url` to obtain the browser CDP
+  WebSocket URL.
+- Use `agent-browser --session <name> get url` for current-page snapshots.
+- Default the session name to `css-view`.
+- Return trimmed stdout and include exit code, stdout, and stderr context in
+  user-facing errors.
+
+Unit tests should cover command construction, availability detection,
+successful output trimming, and failed commands without starting a real browser.
+Gate, commit, and run CodeRabbit before continuing.
+
+### Milestone 8: Expose backend selection in the CLI
+
+Add CLI options and resolution logic:
+
+- `--backend <backend>` with choices `agent-browser` and `playwright`.
+- `--agent-browser-session <name>` with default `css-view`.
+- `--use-current-page` for `agent-browser` snapshots that should not navigate.
+- Make the positional URL optional only when `--use-current-page` is valid.
+- If `--cdp-url` is provided, bypass backend selection and keep the existing
+  direct CDP capture path.
+- If `--backend` is omitted, prefer `agent-browser` when available and fall
+  back to `playwright` when it is not.
+- If the effective backend is `agent-browser` and the user did not explicitly
+  pass `--mode`, default the mode to `cdp`.
+- Reject `--backend agent-browser --mode walker` with a clear error because the
+  agent-browser backend provides a CDP endpoint, not an in-page walker.
+- Reject `--use-current-page` unless the effective backend is `agent-browser`.
+
+Behavioural CLI tests should prove help text, backend fallback, invalid
+combinations, `--cdp-url` precedence, and no-URL validation. Gate, commit, and
+run CodeRabbit before continuing.
+
+### Milestone 9: Update install guidance and remove eager Playwright downloads
+
+Remove the package `postinstall` that installs Chromium, Firefox, and WebKit.
+Update README, user guide, developer guide, CLI reference, and install script
+text so Fedora/Rocky users see `agent-browser` as the recommended backend and
+Playwright browsers as optional downloads for the local Playwright backend.
+
+Documentation must explain:
+
+- Default backend precedence.
+- How to install or verify `agent-browser`.
+- How to request the Playwright backend explicitly.
+- That Playwright browser binaries are optional and installed manually with
+  `bunx playwright install chromium` or the broader set only when needed.
+- That `--cdp-url` remains the low-level direct endpoint path.
+
+Docs and package changes should be gated, committed, and reviewed with
+CodeRabbit before final validation.
+
+### Milestone 10: End-to-end validation and completion audit
+
+Add or extend e2e coverage for the real `agent-browser` backend when the binary
+is available. Use unique session names and close only the sessions created by
+the test. Keep the existing direct CDP e2e test because it proves the core
+transport independently of `agent-browser` installation.
+
+Run final gates sequentially:
+
+```bash
+bun run fmt 2>&1 | tee /tmp/fmt-css-view-fix-for-fedora.out
+bun run lint 2>&1 | tee /tmp/lint-css-view-fix-for-fedora.out
+bun run test 2>&1 | tee /tmp/test-css-view-fix-for-fedora.out
+bunx tsc --noEmit 2>&1 | tee /tmp/typecheck-css-view-fix-for-fedora.out
+```
+
+Then run final `coderabbit review --agent`, clear actionable findings, rerun
+the applicable gates, commit, and record the completion audit in this plan.
 
 ### Milestone 1: Add a testable connection model
 
@@ -363,6 +512,17 @@ The final completion audit must prove every explicit requirement:
 - [x] 2026-06-01: Ran the final completion audit; current evidence proves
   every requested deliverable is present and validated.
 - [x] 2026-06-01: Prepared to mark the thread goal complete.
+- [x] 2026-06-01: Reopened this ExecPlan for phase 2 after the user requested
+  an `agent-browser` backend, default backend selection, install-doc updates,
+  removal of eager Playwright browser downloads, and CodeRabbit review after
+  each gated milestone.
+- [x] 2026-06-01: Used two Wyvern agents for read-only planning: one reviewed
+  CLI/snapshot integration points and validation rules; one reviewed docs,
+  install, and package implications.
+- [x] 2026-06-01: Used Firecrawl to confirm current `agent-browser` command
+  syntax for `--session`, `open`, `get cdp-url`, `get url`, and `close`.
+- [ ] 2026-06-01: Gate, commit, and request CodeRabbit review for the phase 2
+  plan update before implementation changes.
 
 ## Surprises & Discoveries
 
@@ -414,6 +574,16 @@ The final completion audit must prove every explicit requirement:
   this repository, while direct CDP calls to `Target.*`, `Page.*`, and
   `DOMSnapshot.captureSnapshot` satisfy the requested bridge and are covered by
   e2e tests.
+- Decision: Implement `--backend agent-browser` as a shell-out adapter that
+  obtains the CDP URL itself, rather than requiring users to combine
+  `--backend agent-browser` with `--cdp-url`.
+  Rationale: The requested backend should make `agent-browser` the install-time
+  and launch-time owner of the browser. `--cdp-url` remains the explicit
+  low-level escape hatch for users who already have an endpoint.
+- Decision: When no backend is specified, prefer `agent-browser` if the binary
+  is available on `PATH`, then fall back to Playwright.
+  Rationale: This matches the Fedora/Rocky reliability goal while preserving a
+  no-extra-flag path for machines that do not have `agent-browser` installed.
 
 ## Outcomes & Retrospective
 

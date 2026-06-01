@@ -524,6 +524,12 @@ The final completion audit must prove every explicit requirement:
 - [x] 2026-06-01: Gated, committed, and requested CodeRabbit review for the
   phase 2 plan update before implementation changes; CodeRabbit reported zero
   findings.
+- [x] 2026-06-01: Implemented Milestone 7 with
+  `AgentBrowserBackend`, injectable command execution, availability detection,
+  session-aware `open`, `get cdp-url`, `get url`, and `close` commands, plus
+  unit coverage for command construction and failures.
+- [x] 2026-06-01: Gated Milestone 7 with `bun run lint`, `bun run test`, and
+  `bunx tsc --noEmit`.
 
 ## Surprises & Discoveries
 

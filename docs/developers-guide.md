@@ -7,6 +7,9 @@ structured.
 
 - `bin/css-view.ts` owns command-line parsing and forwards normalized options
   into the snapshot layer.
+- `src/cli/backend.ts` owns CLI backend selection. It defaults to
+  `agent-browser` when the binary is on `PATH`, falls back to Playwright when
+  it is not, and preserves direct `--cdp-url` capture as an explicit bypass.
 - `src/snapshot/index.ts` owns snapshot planning, browser target selection, and
   top-level result metadata.
 - `src/snapshot/cdp.ts` owns Chromium DevTools Protocol capture. Local CDP
@@ -24,8 +27,9 @@ Use the smallest layer that proves the behaviour being changed.
 
 - **Unit tests** live beside source modules under `src/**/__tests__`. They
   cover pure transformations, option validation, and fake browser target
-  selection. Examples include `options.test.ts`, `connection.test.ts`, and the
-  existing diff/property resolver tests.
+  selection. Examples include `options.test.ts`, `connection.test.ts`,
+  `src/cli/__tests__/backend.test.ts`, and the existing diff/property resolver
+  tests.
 - **Behavioural tests** exercise user-visible CLI behaviour without requiring a
   real browser when possible. `src/cli/__tests__/css-view.test.ts` spawns the
   CLI and verifies help output and invalid option combinations.
@@ -86,8 +90,17 @@ Use `bun run fmt` when Biome reports formatting differences:
 bun run fmt 2>&1 | tee /tmp/fmt-css-view-$(git branch --show).out
 ```
 
-The browser-backed tests require Playwright's Chromium browser. Install it with
-the project toolchain when the cache is empty:
+The default runtime backend uses `agent-browser`. For local smoke testing of
+that path, install:
+
+```bash
+npm install -g agent-browser
+agent-browser install
+```
+
+Browser-backed tests that launch Chromium directly require Playwright's
+Chromium browser. Install it with the project toolchain when the cache is
+empty:
 
 ```bash
 bunx playwright install chromium

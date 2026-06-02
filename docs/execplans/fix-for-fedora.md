@@ -540,6 +540,15 @@ The final completion audit must prove every explicit requirement:
   explicit Playwright override, and direct `--cdp-url` precedence.
 - [x] 2026-06-01: Gated Milestone 8 with `bun run lint`, `bun run test`, and
   `bunx tsc --noEmit`.
+- [x] 2026-06-01: Requested CodeRabbit review for Milestone 8; CodeRabbit
+  completed with zero findings.
+- [x] 2026-06-01: Implemented Milestone 9 by removing the package
+  `postinstall` Playwright browser download and updating README,
+  `docs/users-guide.md`, `docs/developers-guide.md`, `docs/css-view.md`, and
+  `scripts/install.sh` so Fedora/Rocky recommend `agent-browser` while
+  Playwright browsers are optional for local Playwright captures.
+- [x] 2026-06-01: Gated Milestone 9 with `bun run lint`, `bun run test`, and
+  `bunx tsc --noEmit`.
 
 ## Surprises & Discoveries
 

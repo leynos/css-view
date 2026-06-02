@@ -36,5 +36,5 @@ if ! bun install -g "$ABS_TARBALL"; then
 fi
 
 echo "\ncss-view linked globally. Ensure the Bun bin directory (typically ~/.bun/bin) is on your PATH."
-echo "If Bun blocked the postinstall script, review untrusted packages with:\n  bun pm -g untrusted"
-echo "Then trust and rerun the Playwright download with:\n  bun pm -g trust ${PKG_NAME}\n  bun pm -g run postinstall ${PKG_NAME}"
+echo "Recommended backend on Fedora and Rocky:\n  npm install -g agent-browser\n  agent-browser install"
+echo "For local Playwright captures, install only the browsers you need, for example:\n  bunx playwright install chromium"

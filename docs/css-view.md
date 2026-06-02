@@ -1,6 +1,6 @@
 # css-view CLI
 
-`css-view` is a Bun + Playwright command-line tool that emits a structured JSON snapshot of a page's computed CSS. It exposes both capture strategies detailed in the design note:
+`css-view` is a Bun command-line tool that emits a structured JSON snapshot of a page's computed CSS. It uses `agent-browser` by default when available, can launch local Playwright browsers when requested, and exposes both capture strategies detailed in the design note:
 
 - **`cdp` mode** (Chromium-only) calls `DOMSnapshot.captureSnapshot` via CDP and returns a flat list of nodes with whitelisted computed values, paint-order data, and bounding boxes. It can launch a local Playwright Chromium browser or attach to an existing browser endpoint with `--cdp-url`.
 - **`walker` mode** (all browsers) runs a browser-side walker that diffs `getComputedStyle` output per element against its parent (for inherited props) and against user-agent defaults.
@@ -13,23 +13,32 @@ The CLI always writes a JSON document with the capture metadata plus the chosen 
    ```bash
    BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bun install
    ```
-2. Download Playwright browsers (needed once per machine):
+2. Install the recommended Fedora/Rocky backend:
    ```bash
-   BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium firefox webkit
+   npm install -g agent-browser
+   agent-browser install
    ```
-   > On stripped-down Linux images you may need to install system libraries such as `libicu`, `libjpeg`, `libwebp`, or `libffi` before the browsers run. Playwright prints the missing list (see `playwright-core/lib/server/registry/dependencies.js` for details).
+3. Optional: download Playwright browsers only when using `--backend playwright`:
+   ```bash
+   BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium
+   ```
+   > On stripped-down Linux images you may need to install system libraries such as `libicu`, `libjpeg`, `libwebp`, or `libffi` before local Playwright browsers run. Playwright prints the missing list (see `playwright-core/lib/server/registry/dependencies.js` for details).
 
 ## Usage
 
 ```
-bun run bin/css-view.ts <url> [options]
+bun run bin/css-view.ts [url] [options]
 ```
 
 Common examples:
 
-- Capture a walker snapshot of `example.org` and stream to stdout:
+- Capture with the default backend and stream to stdout:
   ```bash
-  bun run bin/css-view.ts https://example.org --mode walker --pretty
+  bun run bin/css-view.ts https://example.org --pretty
+  ```
+- Capture a walker snapshot with local Playwright and stream to stdout:
+  ```bash
+  bun run bin/css-view.ts https://example.org --backend playwright --mode walker --pretty
   ```
 - Capture a CDP snapshot of `localhost:4173` and save it to a file:
   ```bash
@@ -37,8 +46,18 @@ Common examples:
   ```
 - Capture a page already opened by agent-browser:
   ```bash
-  agent-browser open http://localhost:4173
-  CDP_URL="$(agent-browser get cdp-url)"
+  bun run bin/css-view.ts http://localhost:4173 \
+    --backend agent-browser --agent-browser-session css-view --pretty
+  ```
+- Snapshot the current page in an agent-browser session without navigating:
+  ```bash
+  bun run bin/css-view.ts \
+    --backend agent-browser --agent-browser-session css-view \
+    --use-current-page --pretty
+  ```
+- Bypass backend selection with a known CDP endpoint:
+  ```bash
+  CDP_URL="$(agent-browser --session css-view get cdp-url)"
   bun run bin/css-view.ts http://localhost:4173 \
     --mode cdp --cdp-url "$CDP_URL" --pretty
   ```
@@ -53,9 +72,12 @@ Common examples:
 
 | Flag | Description |
 | --- | --- |
-| `--mode <cdp|walker>` | Choose the capture backend (default `walker`). |
-| `--browser <chromium|firefox|webkit>` | Override the browser engine. CDP mode always forces `chromium`. |
-| `--cdp-url <url>` | CDP-only: attach to an existing Chromium CDP endpoint from a tool such as `agent-browser get cdp-url`. Accepts HTTP(S) debugging URLs and WS(S) browser WebSocket URLs. Cannot be combined with `--browser`. |
+| `--backend <agent-browser|playwright>` | Choose the browser backend. Defaults to `agent-browser` when the binary is on `PATH`; otherwise falls back to `playwright`. |
+| `--mode <cdp|walker>` | Choose the capture mode. `agent-browser` uses `cdp`; Playwright defaults to `walker`. |
+| `--browser <chromium|firefox|webkit>` | Override the Playwright browser engine. CDP mode requires `chromium`; this cannot be combined with `--backend agent-browser` or `--cdp-url`. |
+| `--agent-browser-session <name>` | Select the agent-browser session used by `--backend agent-browser` (default `css-view`). |
+| `--use-current-page` | With `--backend agent-browser`, snapshot the active page in the selected session without opening or navigating a URL. |
+| `--cdp-url <url>` | CDP-only: attach to an existing Chromium CDP endpoint from a tool such as `agent-browser get cdp-url`. Accepts HTTP(S) debugging URLs and WS(S) browser WebSocket URLs. Bypasses backend selection and cannot be combined with `--browser`. |
 | `--props`, `--props-file` | Override the computed-style whitelist. Accepts comma or newline separated values. |
 | `--inherited`, `--inherited-file` | Walker-only overrides for the inherited-property set used when diffing. |
 | `--max-nodes <n>` | Walker-only guard to stop after visiting `n` elements (default 2000). |

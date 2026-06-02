@@ -1,3 +1,11 @@
+/**
+ * Snapshot planning and browser lifecycle orchestration.
+ *
+ * This module is the public snapshot facade used by the CLI. It validates the
+ * requested capture mode, chooses either a local Playwright browser or direct
+ * CDP endpoint capture, owns browser/context cleanup, and delegates payload
+ * collection to the CDP and walker capture modules.
+ */
 import {
   type Browser,
   type BrowserContext,

@@ -2,8 +2,8 @@
  * Shell-out adapter for the agent-browser CLI.
  *
  * The CLI backend layer uses this module to open pages, discover the browser
- * CDP endpoint, and identify the active tab in an agent-browser session without
- * coupling snapshot capture to agent-browser process management details.
+ * CDP endpoint, and identify the active page tab in an agent-browser session
+ * without coupling snapshot capture to agent-browser process management details.
  */
 export interface AgentBrowserCommandResult {
   exitCode: number;
@@ -115,7 +115,7 @@ export class AgentBrowserBackend {
     return this.run("get url", ["get", "url"]);
   }
 
-  /** Return the active tab metadata used to disambiguate duplicate URLs. */
+  /** Return the active page-tab metadata used to disambiguate duplicate URLs. */
   async getActiveTab(): Promise<AgentBrowserTab> {
     const raw = await this.run("tab list", ["tab", "list", "--json"]);
     let response: AgentBrowserTabListResponse;
@@ -129,9 +129,9 @@ export class AgentBrowserBackend {
       );
     }
 
-    const activeTab = response.data?.tabs?.find((tab) => tab.active);
+    const activeTab = response.data?.tabs?.find((tab) => tab.active && tab.type === "page");
     if (!activeTab || typeof activeTab.index !== "number" || !activeTab.url) {
-      throw new Error("agent-browser did not report an active tab");
+      throw new Error("agent-browser did not report an active page tab");
     }
 
     return activeTab;

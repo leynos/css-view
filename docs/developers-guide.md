@@ -12,7 +12,8 @@ structured.
   it is not, and preserves direct `--cdp-url` capture as an explicit bypass.
 - `src/snapshot/agent-browser-backend.ts` owns the shell-out adapter for
   `agent-browser` sessions, including page opening, CDP URL discovery, and
-  active tab lookup for current-page captures.
+  active page-tab lookup for current-page captures. Non-page tabs, such as
+  DevTools or extension targets, must be ignored before CDP target selection.
 - `src/snapshot/index.ts` owns snapshot planning, browser target selection, and
   top-level result metadata.
 - `src/snapshot/cdp.ts` owns Chromium DevTools Protocol capture. Local CDP

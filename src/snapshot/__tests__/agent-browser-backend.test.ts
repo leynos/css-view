@@ -91,7 +91,7 @@ describe("AgentBrowserBackend", () => {
     ]);
   });
 
-  it("gets the active tab from the tab list", async () => {
+  it("gets the active page tab from the tab list", async () => {
     const { calls, runner } = recordingRunner([
       commandResult({
         stdout: JSON.stringify({
@@ -124,12 +124,17 @@ describe("AgentBrowserBackend", () => {
     ]);
   });
 
-  it("requires an active tab in the tab list", async () => {
+  it("requires an active page tab in the tab list", async () => {
     const { runner } = recordingRunner([
       commandResult({
         stdout: JSON.stringify({
           success: true,
-          data: { tabs: [{ active: false, index: 0, url: "https://example.test/first" }] },
+          data: {
+            tabs: [
+              { active: true, index: 0, type: "devtools", url: "devtools://devtools/bundled" },
+              { active: false, index: 1, type: "page", url: "https://example.test/first" },
+            ],
+          },
           error: null,
         }),
       }),
@@ -137,7 +142,7 @@ describe("AgentBrowserBackend", () => {
     const backend = new AgentBrowserBackend({ runner });
 
     await expect(backend.getActiveTab()).rejects.toThrow(
-      "agent-browser did not report an active tab",
+      "agent-browser did not report an active page tab",
     );
   });
 

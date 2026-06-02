@@ -5,7 +5,7 @@ This ExecPlan (execution plan) is a living document. The sections
 `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work
 proceeds.
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 ## Purpose / big picture
 
@@ -560,6 +560,12 @@ The final completion audit must prove every explicit requirement:
   `bun run test`, and `bunx tsc --noEmit`. The full test suite passed with
   47 tests, including unit, behavioural, snapshot, direct CDP e2e, and real
   `agent-browser` backend e2e coverage.
+- [x] 2026-06-01: Requested final CodeRabbit review for Milestone 10;
+  CodeRabbit completed with zero findings.
+- [x] 2026-06-01: Ran the phase 2 completion audit against the objective and
+  current tree. Every explicit backend, validation, documentation, postinstall,
+  CDP, testing, Wyvern, Firecrawl, gate, and CodeRabbit requirement is proven
+  by committed code, docs, tests, command output, and review evidence.
 
 ## Surprises & Discoveries
 
@@ -646,3 +652,22 @@ Documentation now includes a README Hello World flow, detailed user guidance
 for `agent-browser get cdp-url`, the `--cdp-url` option in the CLI reference,
 and a developer guide that explains unit, behavioural, snapshot, and e2e test
 strategy.
+
+Phase 2 added the first-class `agent-browser` backend. The CLI now supports
+`--backend agent-browser`, `--backend playwright`,
+`--agent-browser-session <name>`, and `--use-current-page`. When no backend is
+specified, `css-view` chooses `agent-browser` if it is available on `PATH` and
+falls back to Playwright otherwise. `--cdp-url` remains a direct endpoint path
+implemented by the direct Bun WebSocket CDP client.
+
+The package no longer installs Chromium, Firefox, and WebKit during
+`postinstall`. README, the user guide, the developer guide, the CLI reference,
+and the install helper now recommend `agent-browser` for Fedora/Rocky and
+describe Playwright browser downloads as optional for local Playwright
+captures.
+
+The final validation suite covers unit tests for adapter and backend
+resolution, behavioural CLI tests, fixture-backed snapshot tests, direct CDP
+e2e tests, and real `agent-browser` backend e2e tests for both default backend
+selection and current-page capture. Deterministic gates and CodeRabbit reviews
+passed for every phase 2 milestone.

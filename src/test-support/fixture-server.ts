@@ -2,7 +2,9 @@
  * Shared fixture-server utilities for browser-backed tests.
  *
  * Tests use this module to serve `tests/fixtures/hello-css` on an available
- * loopback port and to close only the child process started for that fixture.
+ * loopback port. The fixture server runs in-process via `Bun.serve`, which
+ * binds to an OS-assigned port directly and avoids the race window between
+ * a probe socket closing and a child process re-binding.
  */
 import { once } from "node:events";
 import net from "node:net";
@@ -13,7 +15,14 @@ export interface FixtureServer {
   close(): Promise<void>;
 }
 
-/** Reserve and release an available loopback port for a fixture server. */
+/**
+ * Reserve and release an available loopback port.
+ *
+ * Used by tests that need to hand a port to an external child process (such
+ * as Chromium's `--remote-debugging-port`). Callers must accept the small
+ * race window between release and re-bind. Prefer binding to port `0`
+ * in-process when possible.
+ */
 export async function findAvailablePort(): Promise<number> {
   const server = net.createServer();
   server.listen(0, "127.0.0.1");
@@ -31,60 +40,72 @@ export async function findAvailablePort(): Promise<number> {
   return port;
 }
 
-/** Poll the fixture origin until http-server is ready to serve index.html. */
-async function waitForServer(origin: string): Promise<void> {
-  const deadline = Date.now() + 10000;
-  let lastError: unknown;
+const MIME_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8",
+};
 
-  while (Date.now() < deadline) {
-    try {
-      const response = await fetch(`${origin}/index.html`);
-      if (response.ok) {
-        return;
-      }
-    } catch (error) {
-      lastError = error;
-    }
-    await Bun.sleep(100);
-  }
-
-  throw new Error(`Fixture server did not become ready: ${String(lastError)}`);
+function contentTypeFor(filePath: string): string {
+  const ext = path.extname(filePath).toLowerCase();
+  return MIME_TYPES[ext] ?? "application/octet-stream";
 }
 
-/** Terminate a child process without allowing cleanup to consume a whole test timeout. */
-async function stopProcess(proc: ReturnType<typeof Bun.spawn>): Promise<void> {
-  proc.kill();
-  const exited = proc.exited.then(() => undefined);
-  await Promise.race([exited, Bun.sleep(2000)]);
-  proc.kill("SIGKILL");
-  await Promise.race([exited, Bun.sleep(2000)]);
-}
-
-/** Start the Hello CSS fixture and return its origin plus a bounded close hook. */
+/**
+ * Start the Hello CSS fixture as an in-process Bun HTTP server.
+ *
+ * Binding to port `0` lets the kernel assign a free port and report it
+ * back synchronously via `server.port`, so there is no window during
+ * which another process could claim the same port.
+ */
 export async function startHelloCssFixtureServer(): Promise<FixtureServer> {
-  const port = await findAvailablePort();
-  const origin = `http://127.0.0.1:${port}`;
-  const fixturePath = path.join(process.cwd(), "tests", "fixtures", "hello-css");
-  const proc = Bun.spawn(
-    ["bunx", "http-server", fixturePath, "-p", String(port), "-a", "127.0.0.1", "-c-1"],
-    {
-      cwd: process.cwd(),
-      stdout: "ignore",
-      stderr: "ignore",
-    },
-  );
+  const fixtureRoot = path.resolve(process.cwd(), "tests", "fixtures", "hello-css");
 
-  try {
-    await waitForServer(origin);
-  } catch (error) {
-    await stopProcess(proc);
-    throw error;
-  }
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    async fetch(request) {
+      const url = new URL(request.url);
+      const rawPath = url.pathname === "/" ? "/index.html" : url.pathname;
+
+      // Resolve against the fixture root and refuse anything that escapes it.
+      const requested = path.resolve(fixtureRoot, `.${rawPath}`);
+      const rootWithSep = fixtureRoot.endsWith(path.sep)
+        ? fixtureRoot
+        : `${fixtureRoot}${path.sep}`;
+      if (requested !== fixtureRoot && !requested.startsWith(rootWithSep)) {
+        return new Response("Forbidden", { status: 403 });
+      }
+
+      const file = Bun.file(requested);
+      if (!(await file.exists())) {
+        return new Response("Not Found", { status: 404 });
+      }
+
+      return new Response(file, {
+        headers: {
+          "content-type": contentTypeFor(requested),
+          "cache-control": "no-store",
+        },
+      });
+    },
+  });
+
+  const origin = `http://127.0.0.1:${server.port}`;
 
   return {
     origin,
     async close() {
-      await stopProcess(proc);
+      await server.stop(true);
     },
   };
 }

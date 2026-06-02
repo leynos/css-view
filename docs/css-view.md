@@ -61,6 +61,16 @@ Common examples:
   bun run bin/css-view.ts http://localhost:4173 \
     --mode cdp --cdp-url "$CDP_URL" --pretty
   ```
+
+  > **Security warning:** `--cdp-url` must only target trusted loopback
+  > endpoints (typically `127.0.0.1`/`localhost`) that you control. Attaching
+  > to a CDP endpoint grants full browser and session control — including
+  > reading cookies, intercepting requests, executing arbitrary JavaScript,
+  > and accessing every open page. Provider-issued WebSocket URLs
+  > (`webSocketDebuggerUrl` values) are session secrets equivalent to a
+  > long-lived auth token; never log, share, or commit them, and revoke the
+  > browser session if one leaks. Never point `--cdp-url` at a remote host
+  > or a CDP endpoint exposed by untrusted software.
 - Restrict computed props to spacing + layout via a manifest file:
   ```bash
   bun run bin/css-view.ts https://example.com \

@@ -4,7 +4,14 @@ import type { CdpSnapshotNode } from "../cdp";
 import { captureSnapshot } from "../index";
 import type { WalkerNodeSnapshot } from "../walker";
 
-const computedProperties = ["color", "font-size", "background-color", "margin-top", "display"];
+const computedProperties = [
+  "color",
+  "font-size",
+  "background-color",
+  "margin-top",
+  "display",
+  "border-top-width",
+];
 
 function findWalkerNode(
   node: WalkerNodeSnapshot | null,

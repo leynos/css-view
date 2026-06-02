@@ -41,6 +41,7 @@ exports[`fixture-backed snapshots captures a stable CDP snapshot subset for the 
     "background-color",
     "margin-top",
     "display",
+    "border-top-width",
   ],
   "mode": "cdp",
   "payloadMode": "cdp",

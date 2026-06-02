@@ -350,7 +350,10 @@ async function resolveWebSocketUrl(cdpUrl: string, timeoutMs: number): Promise<s
     return cdpUrl;
   }
 
-  const versionUrl = new URL("/json/version", parsed);
+  const versionUrl = new URL(parsed);
+  versionUrl.pathname = versionUrl.pathname.replace(/\/?$/, "/json/version");
+  versionUrl.search = "";
+  versionUrl.hash = "";
   const abortController = new AbortController();
   const timer = setTimeout(() => abortController.abort(), timeoutMs);
   const response = await fetch(versionUrl, { signal: abortController.signal }).finally(() => {

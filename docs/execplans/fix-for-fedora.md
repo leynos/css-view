@@ -530,9 +530,10 @@ The final completion audit must prove every explicit requirement:
   unit coverage for command construction and failures.
 - [x] 2026-06-01: Gated Milestone 7 with `bun run lint`, `bun run test`, and
   `bunx tsc --noEmit`.
-- [ ] 2026-06-01: Request CodeRabbit review for Milestone 7. The first attempt
-  reached `awaiting_browser_auth` and was stopped after it remained blocked on
-  interactive authentication rather than a rate limit.
+- [x] 2026-06-01: Requested CodeRabbit review for Milestone 7. The first
+  attempt reached `awaiting_browser_auth`; later attempts hit recoverable rate
+  limits and used the requested randomized backoff; the final review completed
+  with zero findings.
 
 ## Surprises & Discoveries
 

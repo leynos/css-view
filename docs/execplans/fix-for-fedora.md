@@ -534,6 +534,12 @@ The final completion audit must prove every explicit requirement:
   attempt reached `awaiting_browser_auth`; later attempts hit recoverable rate
   limits and used the requested randomized backoff; the final review completed
   with zero findings.
+- [x] 2026-06-01: Implemented Milestone 8 with `--backend`,
+  `--agent-browser-session`, and `--use-current-page`, plus default
+  agent-browser selection when available, Playwright fallback when unavailable,
+  explicit Playwright override, and direct `--cdp-url` precedence.
+- [x] 2026-06-01: Gated Milestone 8 with `bun run lint`, `bun run test`, and
+  `bunx tsc --noEmit`.
 
 ## Surprises & Discoveries
 

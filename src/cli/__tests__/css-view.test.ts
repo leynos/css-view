@@ -23,6 +23,9 @@ describe("css-view CLI", () => {
     expect(result.exitCode).toBe(0);
     expect(result.stdout).toContain("--cdp-url <url>");
     expect(result.stdout).toContain("Attach to an existing Chromium CDP endpoint");
+    expect(result.stdout).toContain("--backend <backend>");
+    expect(result.stdout).toContain("--agent-browser-session <name>");
+    expect(result.stdout).toContain("--use-current-page");
   });
 
   it("rejects CDP URLs outside CDP mode before launching a browser", async () => {
@@ -49,5 +52,37 @@ describe("css-view CLI", () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain("--browser cannot be combined with --cdp-url");
+  });
+
+  it("rejects walker mode for the agent-browser backend before checking PATH", async () => {
+    const result = await runCssView([
+      "https://example.test",
+      "--backend",
+      "agent-browser",
+      "--mode",
+      "walker",
+    ]);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("--backend agent-browser requires --mode cdp");
+  });
+
+  it("rejects current-page snapshots for the Playwright backend", async () => {
+    const result = await runCssView([
+      "https://example.test",
+      "--backend",
+      "playwright",
+      "--use-current-page",
+    ]);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("--use-current-page requires the agent-browser backend");
+  });
+
+  it("requires a URL for explicit Playwright snapshots", async () => {
+    const result = await runCssView(["--backend", "playwright"]);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.stderr).toContain("A URL is required");
   });
 });

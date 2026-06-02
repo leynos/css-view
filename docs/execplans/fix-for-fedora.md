@@ -549,6 +549,17 @@ The final completion audit must prove every explicit requirement:
   Playwright browsers are optional for local Playwright captures.
 - [x] 2026-06-01: Gated Milestone 9 with `bun run lint`, `bun run test`, and
   `bunx tsc --noEmit`.
+- [x] 2026-06-01: Requested CodeRabbit review for Milestone 9; the first
+  attempt hit a recoverable rate limit and used `vsleep` for the requested
+  randomized backoff; the retry completed with zero findings.
+- [x] 2026-06-01: Implemented Milestone 10 e2e coverage for the real
+  `agent-browser` backend using unique sessions: default backend selection when
+  `agent-browser` is on `PATH`, and `--use-current-page` capture without
+  navigation.
+- [x] 2026-06-01: Ran final deterministic gates: `bun run lint`,
+  `bun run test`, and `bunx tsc --noEmit`. The full test suite passed with
+  47 tests, including unit, behavioural, snapshot, direct CDP e2e, and real
+  `agent-browser` backend e2e coverage.
 
 ## Surprises & Discoveries
 

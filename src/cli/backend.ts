@@ -136,9 +136,6 @@ export async function prepareSnapshotRequest(
 
     const activeTab = input.useCurrentPage ? await agentBrowser.getActiveTab() : undefined;
     const url = activeTab?.url ?? requireUrl(input.url);
-    if (!url) {
-      throw new Error("agent-browser did not report a current page URL");
-    }
 
     if (!input.useCurrentPage) {
       await agentBrowser.open(url);

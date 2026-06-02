@@ -1,3 +1,11 @@
+/**
+ * CLI backend resolution for css-view.
+ *
+ * This module translates raw command-line backend options into the concrete
+ * snapshot request consumed by `src/snapshot`. It keeps direct CDP endpoint
+ * capture independent from backend selection, preserves explicit Playwright
+ * choices, and uses the agent-browser adapter only when that backend is active.
+ */
 import type { BrowserEngine, SnapshotMode } from "../snapshot";
 import {
   AgentBrowserBackend,
@@ -34,6 +42,7 @@ export interface PrepareSnapshotRequestDependencies {
   agentBrowserRunner?: AgentBrowserCommandRunner;
 }
 
+/** Require a URL for CLI paths that cannot infer one from the active browser. */
 function requireUrl(url: string | undefined, message = "A URL is required"): string {
   if (!url) {
     throw new Error(message);
@@ -42,6 +51,13 @@ function requireUrl(url: string | undefined, message = "A URL is required"): str
   return url;
 }
 
+/**
+ * Resolve the effective backend while preserving explicit user intent.
+ *
+ * Playwright-only options, such as walker mode or a named browser engine, force
+ * Playwright for implicit backend selection. An explicit agent-browser request
+ * still validates that the binary is available.
+ */
 async function resolveBackend(
   requestedBackend: CliBackend | undefined,
   isAvailable: () => Promise<boolean>,
@@ -68,6 +84,12 @@ async function resolveBackend(
   return hasAgentBrowser ? "agent-browser" : "playwright";
 }
 
+/**
+ * Build the snapshot request that the CLI will pass into the snapshot layer.
+ *
+ * The result contains any URL, CDP endpoint, browser, and active-page metadata
+ * needed by `captureSnapshot` after backend-specific command execution.
+ */
 export async function prepareSnapshotRequest(
   input: CliBackendInput,
   dependencies: PrepareSnapshotRequestDependencies = {},

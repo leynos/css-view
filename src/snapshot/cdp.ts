@@ -1,3 +1,10 @@
+/**
+ * Chromium DevTools Protocol capture implementation.
+ *
+ * Local captures use Playwright page CDP sessions, while external `--cdp-url`
+ * captures use the direct WebSocket client in this module so css-view can
+ * attach to agent-browser or provider-managed browser endpoints.
+ */
 import type { Page } from "playwright";
 import type { Protocol } from "playwright-core/types/protocol";
 
@@ -70,6 +77,7 @@ interface GetTargetsResult {
   targetInfos: TargetInfo[];
 }
 
+/** Build the DOMSnapshot request for the caller's computed-style whitelist. */
 const snapshotParameters = (
   properties: string[],
 ): Protocol.DOMSnapshot.captureSnapshotParameters => ({
@@ -80,6 +88,7 @@ const snapshotParameters = (
   includeTextColorOpacities: true,
 });
 
+/** Minimal CDP WebSocket client with request and event timeout handling. */
 class CdpConnection {
   private nextId = 1;
   private readonly pending = new Map<
@@ -112,6 +121,7 @@ class CdpConnection {
     });
   }
 
+  /** Open the CDP WebSocket and fail if the connection handshake times out. */
   static connect(webSocketUrl: string, timeoutMs: number): Promise<CdpConnection> {
     return new Promise((resolve, reject) => {
       const socket = new WebSocket(webSocketUrl);
@@ -131,6 +141,7 @@ class CdpConnection {
     });
   }
 
+  /** Send one CDP command and reject if its response does not arrive in time. */
   send<T>(method: string, params: Record<string, unknown> = {}, sessionId?: string): Promise<T> {
     const id = this.nextId;
     this.nextId += 1;
@@ -165,6 +176,7 @@ class CdpConnection {
     return promise;
   }
 
+  /** Wait for one matching CDP event and remove the waiter on completion or timeout. */
   waitForEvent(method: string, sessionId: string | undefined, timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
       const waiter: (typeof this.eventWaiters)[number] = {
@@ -187,6 +199,7 @@ class CdpConnection {
     });
   }
 
+  /** Wait until network activity is idle after the supplied lifecycle event. */
   waitForNetworkIdle(
     sessionId: string,
     timeoutMs: number,
@@ -270,10 +283,12 @@ class CdpConnection {
     });
   }
 
+  /** Close the WebSocket; outstanding requests are rejected by the close handler. */
   close(): void {
     this.socket.close();
   }
 
+  /** Dispatch incoming CDP responses and events to pending requests and waiters. */
   private handleMessage(raw: string): void {
     const message = JSON.parse(raw) as CdpCommandResponse<unknown> & CdpEvent;
     if (typeof message.id === "number") {
@@ -306,6 +321,7 @@ class CdpConnection {
     }
   }
 
+  /** Reject all pending work when the CDP transport fails or closes. */
   private rejectPending(error: Error): void {
     for (const pending of this.pending.values()) {
       clearTimeout(pending.timer);
@@ -318,6 +334,7 @@ class CdpConnection {
     }
   }
 
+  /** Remove an event waiter if it has not already completed or failed. */
   private removeEventWaiter(waiter: (typeof this.eventWaiters)[number]): void {
     const index = this.eventWaiters.indexOf(waiter);
     if (index >= 0) {
@@ -326,6 +343,7 @@ class CdpConnection {
   }
 }
 
+/** Resolve HTTP(S) CDP endpoints to browser WebSocket URLs with a timeout. */
 async function resolveWebSocketUrl(cdpUrl: string, timeoutMs: number): Promise<string> {
   const parsed = new URL(cdpUrl);
   if (parsed.protocol === "ws:" || parsed.protocol === "wss:") {
@@ -349,6 +367,7 @@ async function resolveWebSocketUrl(cdpUrl: string, timeoutMs: number): Promise<s
   return version.webSocketDebuggerUrl;
 }
 
+/** Attach to the requested CDP page and perform navigation when required. */
 async function attachToPage(
   connection: CdpConnection,
   {
@@ -403,6 +422,7 @@ async function attachToPage(
   return sessionId;
 }
 
+/** Convert Chromium DOMSnapshot output into css-view's stable CDP payload. */
 function buildCdpSnapshotResult(
   response: Protocol.DOMSnapshot.captureSnapshotReturnValue,
   properties: string[],
@@ -499,6 +519,7 @@ function buildCdpSnapshotResult(
   return { mode: "cdp", nodes: records, computedProperties: properties };
 }
 
+/** Capture computed styles from an existing browser-level CDP endpoint. */
 export async function captureWithCdpEndpoint({
   cdpUrl,
   url,
@@ -531,6 +552,7 @@ export async function captureWithCdpEndpoint({
   }
 }
 
+/** Capture computed styles from a Playwright page using its CDP session. */
 export async function captureWithCdp(
   page: Page,
   { properties }: CdpCaptureOptions,

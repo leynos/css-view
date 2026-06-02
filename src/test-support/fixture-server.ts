@@ -1,3 +1,9 @@
+/**
+ * Shared fixture-server utilities for browser-backed tests.
+ *
+ * Tests use this module to serve `tests/fixtures/hello-css` on an available
+ * loopback port and to close only the child process started for that fixture.
+ */
 import { once } from "node:events";
 import net from "node:net";
 import path from "node:path";
@@ -7,6 +13,7 @@ export interface FixtureServer {
   close(): Promise<void>;
 }
 
+/** Reserve and release an available loopback port for a fixture server. */
 export async function findAvailablePort(): Promise<number> {
   const server = net.createServer();
   server.listen(0, "127.0.0.1");
@@ -24,6 +31,7 @@ export async function findAvailablePort(): Promise<number> {
   return port;
 }
 
+/** Poll the fixture origin until http-server is ready to serve index.html. */
 async function waitForServer(origin: string): Promise<void> {
   const deadline = Date.now() + 10000;
   let lastError: unknown;
@@ -43,6 +51,7 @@ async function waitForServer(origin: string): Promise<void> {
   throw new Error(`Fixture server did not become ready: ${String(lastError)}`);
 }
 
+/** Terminate a child process without allowing cleanup to consume a whole test timeout. */
 async function stopProcess(proc: ReturnType<typeof Bun.spawn>): Promise<void> {
   proc.kill();
   const exited = proc.exited.then(() => undefined);
@@ -51,6 +60,7 @@ async function stopProcess(proc: ReturnType<typeof Bun.spawn>): Promise<void> {
   await Promise.race([exited, Bun.sleep(2000)]);
 }
 
+/** Start the Hello CSS fixture and return its origin plus a bounded close hook. */
 export async function startHelloCssFixtureServer(): Promise<FixtureServer> {
   const port = await findAvailablePort();
   const origin = `http://127.0.0.1:${port}`;

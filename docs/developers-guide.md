@@ -10,6 +10,9 @@ structured.
 - `src/cli/backend.ts` owns CLI backend selection. It defaults to
   `agent-browser` when the binary is on `PATH`, falls back to Playwright when
   it is not, and preserves direct `--cdp-url` capture as an explicit bypass.
+- `src/snapshot/agent-browser-backend.ts` owns the shell-out adapter for
+  `agent-browser` sessions, including page opening, CDP URL discovery, and
+  active tab lookup for current-page captures.
 - `src/snapshot/index.ts` owns snapshot planning, browser target selection, and
   top-level result metadata.
 - `src/snapshot/cdp.ts` owns Chromium DevTools Protocol capture. Local CDP
@@ -108,3 +111,8 @@ bunx playwright install chromium
 
 Do not run these gates in parallel. The browser cache, Bun cache, and
 http-server child processes are shared host resources.
+
+`bun run test` intentionally runs e2e, CLI, and snapshot/unit suites in
+separate serial Bun invocations. Keeping process-heavy browser suites isolated
+prevents a previous suite's child-process state from affecting later CLI
+subprocess assertions.

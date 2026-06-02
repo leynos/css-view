@@ -1,3 +1,10 @@
+/**
+ * Shell-out adapter for the agent-browser CLI.
+ *
+ * The CLI backend layer uses this module to open pages, discover the browser
+ * CDP endpoint, and identify the active tab in an agent-browser session without
+ * coupling snapshot capture to agent-browser process management details.
+ */
 export interface AgentBrowserCommandResult {
   exitCode: number;
   stdout: string;
@@ -31,6 +38,7 @@ interface AgentBrowserTabListResponse {
 
 export const DEFAULT_AGENT_BROWSER_SESSION = "css-view";
 
+/** Run an agent-browser command and collect stdout, stderr, and exit status. */
 export async function defaultAgentBrowserCommandRunner(
   args: readonly string[],
 ): Promise<AgentBrowserCommandResult> {
@@ -48,6 +56,7 @@ export async function defaultAgentBrowserCommandRunner(
   return { exitCode, stdout, stderr };
 }
 
+/** Check whether the agent-browser binary is available on PATH. */
 export async function isAgentBrowserAvailable(
   runner: AgentBrowserCommandRunner = defaultAgentBrowserCommandRunner,
 ): Promise<boolean> {
@@ -59,6 +68,7 @@ export async function isAgentBrowserAvailable(
   }
 }
 
+/** Format a failed agent-browser command with the useful output streams. */
 function commandError(label: string, result: AgentBrowserCommandResult): Error {
   const details = [
     result.stderr.trim() ? `stderr: ${result.stderr.trim()}` : undefined,
@@ -74,10 +84,12 @@ function commandError(label: string, result: AgentBrowserCommandResult): Error {
   );
 }
 
+/** Session-scoped facade over the agent-browser commands used by css-view. */
 export class AgentBrowserBackend {
   readonly session: string;
   readonly runner: AgentBrowserCommandRunner;
 
+  /** Create an adapter bound to one agent-browser session. */
   constructor(options: AgentBrowserBackendOptions = {}) {
     const session = options.session ?? DEFAULT_AGENT_BROWSER_SESSION;
     if (!session.trim()) {
@@ -88,18 +100,22 @@ export class AgentBrowserBackend {
     this.runner = options.runner ?? defaultAgentBrowserCommandRunner;
   }
 
+  /** Navigate the selected session to the requested URL. */
   async open(url: string): Promise<void> {
     await this.run("open", ["open", url]);
   }
 
+  /** Return the browser-level CDP WebSocket URL for the selected session. */
   async getCdpUrl(): Promise<string> {
     return this.run("get cdp-url", ["get", "cdp-url"]);
   }
 
+  /** Return the active page URL reported by agent-browser. */
   async getCurrentUrl(): Promise<string> {
     return this.run("get url", ["get", "url"]);
   }
 
+  /** Return the active tab metadata used to disambiguate duplicate URLs. */
   async getActiveTab(): Promise<AgentBrowserTab> {
     const raw = await this.run("tab list", ["tab", "list", "--json"]);
     let response: AgentBrowserTabListResponse;
@@ -121,10 +137,12 @@ export class AgentBrowserBackend {
     return activeTab;
   }
 
+  /** Close the selected agent-browser session. */
   async close(): Promise<void> {
     await this.run("close", ["close"]);
   }
 
+  /** Execute a session-scoped agent-browser command and return trimmed stdout. */
   private async run(label: string, command: readonly string[]): Promise<string> {
     const result = await this.runner(["agent-browser", "--session", this.session, ...command]);
 

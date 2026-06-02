@@ -1,4 +1,11 @@
 #!/usr/bin/env -S bun run
+/**
+ * Command-line entrypoint for css-view.
+ *
+ * This module parses user options with Commander, asks the CLI backend layer to
+ * resolve the effective browser transport, and forwards a normalized snapshot
+ * request into the snapshot package.
+ */
 import { promises as fs } from "node:fs";
 import { Command, Option } from "commander";
 import { prepareSnapshotRequest } from "../src/cli/backend";
@@ -9,6 +16,7 @@ import {
 } from "../src/snapshot/constants";
 import { resolvePropertyList } from "../src/snapshot/property-resolver";
 
+/** Parse non-negative integer CLI option values with a user-facing label. */
 function parseInteger(value: string, label: string): number {
   const parsed = Number.parseInt(value, 10);
   if (Number.isNaN(parsed) || parsed < 0) {
@@ -17,6 +25,7 @@ function parseInteger(value: string, label: string): number {
   return parsed;
 }
 
+/** Build and execute the CLI command, writing the snapshot JSON to file or stdout. */
 async function main() {
   const program = new Command();
   program

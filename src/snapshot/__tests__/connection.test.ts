@@ -202,4 +202,69 @@ describe("openSnapshotTarget", () => {
       },
     ]);
   });
+
+  it("closes a CDP browser when page setup fails", async () => {
+    const page = new FakePage("about:blank");
+    const context = new FakeContext([page]);
+    const browser = new FakeBrowser([context]);
+    const browserType = {
+      async connectOverCDP() {
+        return browser;
+      },
+    };
+    page.goto = async () => {
+      throw new Error("navigation failed");
+    };
+    const plan = resolveSnapshotPlan({
+      url: "https://example.test/",
+      mode: "cdp",
+      cdpUrl: "http://127.0.0.1:9222/",
+      properties: [],
+      inheritedProperties: [],
+    });
+
+    await expect(
+      openSnapshotTarget<FakePage, FakeContext, FakeBrowser>({
+        plan,
+        url: "https://example.test/",
+        browserType,
+      }),
+    ).rejects.toThrow("navigation failed");
+
+    expect(browser.closeCalls).toBe(1);
+    expect(context.closeCalls).toBe(0);
+  });
+
+  it("closes local browser resources when page setup fails", async () => {
+    const page = new FakePage("about:blank");
+    const context = new FakeContext([page]);
+    const browser = new FakeBrowser([context]);
+    const browserType = {
+      async launch() {
+        browser.newContext = async () => context;
+        context.newPage = async () => page;
+        return browser;
+      },
+    };
+    page.goto = async () => {
+      throw new Error("navigation failed");
+    };
+    const plan = resolveSnapshotPlan({
+      url: "https://example.test/",
+      mode: "walker",
+      properties: [],
+      inheritedProperties: [],
+    });
+
+    await expect(
+      openSnapshotTarget<FakePage, FakeContext, FakeBrowser>({
+        plan,
+        url: "https://example.test/",
+        browserType,
+      }),
+    ).rejects.toThrow("navigation failed");
+
+    expect(context.closeCalls).toBe(1);
+    expect(browser.closeCalls).toBe(1);
+  });
 });

@@ -36,6 +36,8 @@ interface CdpEndpointCaptureOptions extends CdpCaptureOptions {
   cdpUrl: string;
   timeoutMs: number;
   waitUntil: "load" | "domcontentloaded" | "networkidle";
+  useCurrentPage?: boolean;
+  activePageIndex?: number;
 }
 
 interface CdpCommandResponse<T> {
@@ -47,6 +49,7 @@ interface CdpCommandResponse<T> {
 interface CdpEvent {
   method: string;
   sessionId?: string;
+  params?: Record<string, unknown>;
 }
 
 interface TargetInfo {
@@ -82,17 +85,22 @@ class CdpConnection {
   private readonly pending = new Map<
     number,
     {
+      timer: ReturnType<typeof setTimeout>;
       resolve(value: unknown): void;
       reject(error: Error): void;
     }
   >();
   private readonly eventWaiters: Array<{
-    method: string;
-    sessionId?: string;
-    resolve(): void;
+    matches(message: CdpEvent): boolean;
+    observe?(message: CdpEvent): boolean;
+    complete(): void;
+    fail(error: Error): void;
   }> = [];
 
-  private constructor(private readonly socket: WebSocket) {
+  private constructor(
+    private readonly socket: WebSocket,
+    private readonly requestTimeoutMs: number,
+  ) {
     socket.addEventListener("message", (event) => {
       this.handleMessage(String(event.data));
     });
@@ -114,7 +122,7 @@ class CdpConnection {
 
       socket.addEventListener("open", () => {
         clearTimeout(timer);
-        resolve(new CdpConnection(socket));
+        resolve(new CdpConnection(socket, timeoutMs));
       });
       socket.addEventListener("error", () => {
         clearTimeout(timer);
@@ -129,30 +137,136 @@ class CdpConnection {
 
     const message = sessionId ? { id, method, params, sessionId } : { id, method, params };
     const promise = new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new Error(`Timed out waiting for CDP response to ${method}`));
+      }, this.requestTimeoutMs);
+
       this.pending.set(id, {
-        resolve: (value) => resolve(value as T),
-        reject,
+        timer,
+        resolve: (value) => {
+          clearTimeout(timer);
+          resolve(value as T);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
       });
     });
 
-    this.socket.send(JSON.stringify(message));
+    try {
+      this.socket.send(JSON.stringify(message));
+    } catch (error) {
+      const pending = this.pending.get(id);
+      this.pending.delete(id);
+      pending?.reject(error instanceof Error ? error : new Error(String(error)));
+    }
     return promise;
   }
 
   waitForEvent(method: string, sessionId: string | undefined, timeoutMs: number): Promise<void> {
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error(`Timed out waiting for CDP event ${method}`));
-      }, timeoutMs);
-
-      this.eventWaiters.push({
-        method,
-        sessionId,
-        resolve: () => {
+      const waiter: (typeof this.eventWaiters)[number] = {
+        matches: (message) =>
+          message.method === method && (sessionId === undefined || message.sessionId === sessionId),
+        complete: () => {
           clearTimeout(timer);
           resolve();
         },
-      });
+        fail: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      };
+      const timer = setTimeout(() => {
+        this.removeEventWaiter(waiter);
+        reject(new Error(`Timed out waiting for CDP event ${method}`));
+      }, timeoutMs);
+      this.eventWaiters.push(waiter);
+    });
+  }
+
+  waitForNetworkIdle(
+    sessionId: string,
+    timeoutMs: number,
+    activateAfter: Promise<void>,
+    idleMs = 500,
+  ): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let idleTimer: ReturnType<typeof setTimeout> | undefined;
+      let isActivated = false;
+      const inFlightRequests = new Set<string>();
+
+      const clearIdleTimer = () => {
+        if (idleTimer) {
+          clearTimeout(idleTimer);
+          idleTimer = undefined;
+        }
+      };
+      const finish = () => {
+        this.removeEventWaiter(waiter);
+        clearTimeout(timeoutTimer);
+        clearIdleTimer();
+        resolve();
+      };
+      const fail = (error: Error) => {
+        this.removeEventWaiter(waiter);
+        clearTimeout(timeoutTimer);
+        clearIdleTimer();
+        reject(error);
+      };
+      const scheduleIdleCheck = () => {
+        clearIdleTimer();
+        if (!isActivated || inFlightRequests.size > 0) {
+          return;
+        }
+        idleTimer = setTimeout(finish, idleMs);
+      };
+
+      const waiter: (typeof this.eventWaiters)[number] = {
+        matches: () => false,
+        observe: (message) => {
+          if (message.sessionId !== sessionId) {
+            return false;
+          }
+
+          if (message.method === "Network.requestWillBeSent") {
+            const requestId = message.params?.requestId;
+            if (typeof requestId === "string") {
+              inFlightRequests.add(requestId);
+            }
+            clearIdleTimer();
+            return false;
+          }
+
+          if (
+            message.method === "Network.loadingFinished" ||
+            message.method === "Network.loadingFailed"
+          ) {
+            const requestId = message.params?.requestId;
+            if (typeof requestId === "string") {
+              inFlightRequests.delete(requestId);
+            }
+            scheduleIdleCheck();
+          }
+
+          return false;
+        },
+        complete: finish,
+        fail,
+      };
+      const timeoutTimer = setTimeout(() => {
+        fail(new Error("Timed out waiting for CDP network idle"));
+      }, timeoutMs);
+      this.eventWaiters.push(waiter);
+
+      activateAfter
+        .then(() => {
+          isActivated = true;
+          scheduleIdleCheck();
+        })
+        .catch(fail);
     });
   }
 
@@ -177,34 +291,53 @@ class CdpConnection {
     }
 
     if (message.method) {
-      const waiterIndex = this.eventWaiters.findIndex(
-        (waiter) =>
-          waiter.method === message.method &&
-          (waiter.sessionId === undefined || waiter.sessionId === message.sessionId),
-      );
+      for (const waiter of [...this.eventWaiters]) {
+        if (waiter.observe?.(message)) {
+          this.removeEventWaiter(waiter);
+          waiter.complete();
+        }
+      }
+
+      const waiterIndex = this.eventWaiters.findIndex((waiter) => waiter.matches(message));
       if (waiterIndex >= 0) {
         const [waiter] = this.eventWaiters.splice(waiterIndex, 1);
-        waiter?.resolve();
+        waiter?.complete();
       }
     }
   }
 
   private rejectPending(error: Error): void {
     for (const pending of this.pending.values()) {
+      clearTimeout(pending.timer);
       pending.reject(error);
     }
     this.pending.clear();
+
+    for (const waiter of this.eventWaiters.splice(0)) {
+      waiter.fail(error);
+    }
+  }
+
+  private removeEventWaiter(waiter: (typeof this.eventWaiters)[number]): void {
+    const index = this.eventWaiters.indexOf(waiter);
+    if (index >= 0) {
+      this.eventWaiters.splice(index, 1);
+    }
   }
 }
 
-async function resolveWebSocketUrl(cdpUrl: string): Promise<string> {
+async function resolveWebSocketUrl(cdpUrl: string, timeoutMs: number): Promise<string> {
   const parsed = new URL(cdpUrl);
   if (parsed.protocol === "ws:" || parsed.protocol === "wss:") {
     return cdpUrl;
   }
 
   const versionUrl = new URL("/json/version", parsed);
-  const response = await fetch(versionUrl);
+  const abortController = new AbortController();
+  const timer = setTimeout(() => abortController.abort(), timeoutMs);
+  const response = await fetch(versionUrl, { signal: abortController.signal }).finally(() => {
+    clearTimeout(timer);
+  });
   if (!response.ok) {
     throw new Error(`Could not read CDP version endpoint: HTTP ${response.status}`);
   }
@@ -218,15 +351,30 @@ async function resolveWebSocketUrl(cdpUrl: string): Promise<string> {
 
 async function attachToPage(
   connection: CdpConnection,
-  url: string,
-  timeoutMs: number,
+  {
+    url,
+    timeoutMs,
+    waitUntil,
+    useCurrentPage,
+    activePageIndex,
+  }: {
+    url: string;
+    timeoutMs: number;
+    waitUntil: "load" | "domcontentloaded" | "networkidle";
+    useCurrentPage?: boolean;
+    activePageIndex?: number;
+  },
 ): Promise<string> {
   const targets = await connection.send<GetTargetsResult>("Target.getTargets");
   const pageTargets = targets.targetInfos.filter((target) => target.type === "page");
-  const target =
-    pageTargets.find((candidate) => candidate.url === url) ??
-    pageTargets[0] ??
-    (await connection.send<CreateTargetResult>("Target.createTarget", { url: "about:blank" }));
+  const target = useCurrentPage
+    ? pageTargets[activePageIndex ?? 0]
+    : (pageTargets.find((candidate) => candidate.url === url) ??
+      pageTargets[0] ??
+      (await connection.send<CreateTargetResult>("Target.createTarget", { url: "about:blank" })));
+  if (!target) {
+    throw new Error("No active CDP page target is available for --use-current-page");
+  }
   const targetId = target.targetId;
 
   const { sessionId } = await connection.send<AttachToTargetResult>("Target.attachToTarget", {
@@ -235,11 +383,21 @@ async function attachToPage(
   });
 
   const currentUrl = "url" in target ? target.url : "about:blank";
-  if (currentUrl !== url) {
+  if (!useCurrentPage && currentUrl !== url) {
     await connection.send("Page.enable", {}, sessionId);
-    const loadEvent = connection.waitForEvent("Page.loadEventFired", sessionId, timeoutMs);
+    const lifecycleEvent =
+      waitUntil === "domcontentloaded" ? "Page.domContentEventFired" : "Page.loadEventFired";
+    const lifecycle = connection.waitForEvent(lifecycleEvent, sessionId, timeoutMs);
+    const networkIdle =
+      waitUntil === "networkidle"
+        ? connection.waitForNetworkIdle(sessionId, timeoutMs, lifecycle)
+        : undefined;
+    if (waitUntil === "networkidle") {
+      await connection.send("Network.enable", {}, sessionId);
+    }
     await connection.send("Page.navigate", { url }, sessionId);
-    await loadEvent;
+    await lifecycle;
+    await networkIdle;
   }
 
   return sessionId;
@@ -346,12 +504,21 @@ export async function captureWithCdpEndpoint({
   url,
   properties,
   timeoutMs,
+  waitUntil,
+  useCurrentPage,
+  activePageIndex,
 }: CdpEndpointCaptureOptions): Promise<CdpSnapshotResult> {
-  const webSocketUrl = await resolveWebSocketUrl(cdpUrl);
+  const webSocketUrl = await resolveWebSocketUrl(cdpUrl, timeoutMs);
   const connection = await CdpConnection.connect(webSocketUrl, timeoutMs);
 
   try {
-    const sessionId = await attachToPage(connection, url, timeoutMs);
+    const sessionId = await attachToPage(connection, {
+      url,
+      timeoutMs,
+      waitUntil,
+      useCurrentPage,
+      activePageIndex,
+    });
     const response = await connection.send<Protocol.DOMSnapshot.captureSnapshotReturnValue>(
       "DOMSnapshot.captureSnapshot",
       snapshotParameters(properties),

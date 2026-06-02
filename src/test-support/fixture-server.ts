@@ -43,6 +43,14 @@ async function waitForServer(origin: string): Promise<void> {
   throw new Error(`Fixture server did not become ready: ${String(lastError)}`);
 }
 
+async function stopProcess(proc: ReturnType<typeof Bun.spawn>): Promise<void> {
+  proc.kill();
+  const exited = proc.exited.then(() => undefined);
+  await Promise.race([exited, Bun.sleep(2000)]);
+  proc.kill("SIGKILL");
+  await Promise.race([exited, Bun.sleep(2000)]);
+}
+
 export async function startHelloCssFixtureServer(): Promise<FixtureServer> {
   const port = await findAvailablePort();
   const origin = `http://127.0.0.1:${port}`;
@@ -51,24 +59,22 @@ export async function startHelloCssFixtureServer(): Promise<FixtureServer> {
     ["bunx", "http-server", fixturePath, "-p", String(port), "-a", "127.0.0.1", "-c-1"],
     {
       cwd: process.cwd(),
-      stdout: "pipe",
-      stderr: "pipe",
+      stdout: "ignore",
+      stderr: "ignore",
     },
   );
 
   try {
     await waitForServer(origin);
   } catch (error) {
-    proc.kill();
-    await proc.exited;
+    await stopProcess(proc);
     throw error;
   }
 
   return {
     origin,
     async close() {
-      proc.kill();
-      await proc.exited;
+      await stopProcess(proc);
     },
   };
 }

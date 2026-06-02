@@ -101,6 +101,32 @@ describe("prepareSnapshotRequest", () => {
     });
   });
 
+  it("uses Playwright for implicit Playwright-only options without checking agent-browser", async () => {
+    let availabilityChecks = 0;
+
+    const request = await prepareSnapshotRequest(
+      {
+        url: "https://example.test/",
+        mode: "walker",
+        browser: "chromium",
+      },
+      {
+        isAgentBrowserAvailable: async () => {
+          availabilityChecks += 1;
+          return true;
+        },
+      },
+    );
+
+    expect(availabilityChecks).toBe(0);
+    expect(request).toEqual({
+      backend: "playwright",
+      url: "https://example.test/",
+      mode: "walker",
+      browser: "chromium",
+    });
+  });
+
   it("uses the configured agent-browser session", async () => {
     const { calls, runner } = recordingRunner([
       commandResult(),
@@ -127,7 +153,18 @@ describe("prepareSnapshotRequest", () => {
 
   it("can snapshot the current agent-browser page without opening a URL", async () => {
     const { calls, runner } = recordingRunner([
-      commandResult({ stdout: "https://example.test/current\n" }),
+      commandResult({
+        stdout: JSON.stringify({
+          success: true,
+          data: {
+            tabs: [
+              { active: false, index: 0, type: "page", url: "https://example.test/current" },
+              { active: true, index: 1, type: "page", url: "https://example.test/current" },
+            ],
+          },
+          error: null,
+        }),
+      }),
       commandResult({ stdout: "ws://127.0.0.1:9222/devtools/browser/abc\n" }),
     ]);
 
@@ -148,9 +185,11 @@ describe("prepareSnapshotRequest", () => {
       url: "https://example.test/current",
       mode: "cdp",
       cdpUrl: "ws://127.0.0.1:9222/devtools/browser/abc",
+      useCurrentPage: true,
+      activePageIndex: 1,
     });
     expect(calls).toEqual([
-      ["agent-browser", "--session", "css-view-current", "get", "url"],
+      ["agent-browser", "--session", "css-view-current", "tab", "list", "--json"],
       ["agent-browser", "--session", "css-view-current", "get", "cdp-url"],
     ]);
   });

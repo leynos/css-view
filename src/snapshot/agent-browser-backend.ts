@@ -13,6 +13,22 @@ export interface AgentBrowserBackendOptions {
   runner?: AgentBrowserCommandRunner;
 }
 
+export interface AgentBrowserTab {
+  active: boolean;
+  index: number;
+  title?: string;
+  type?: string;
+  url: string;
+}
+
+interface AgentBrowserTabListResponse {
+  success?: boolean;
+  data?: {
+    tabs?: AgentBrowserTab[];
+  };
+  error?: unknown;
+}
+
 export const DEFAULT_AGENT_BROWSER_SESSION = "css-view";
 
 export async function defaultAgentBrowserCommandRunner(
@@ -82,6 +98,27 @@ export class AgentBrowserBackend {
 
   async getCurrentUrl(): Promise<string> {
     return this.run("get url", ["get", "url"]);
+  }
+
+  async getActiveTab(): Promise<AgentBrowserTab> {
+    const raw = await this.run("tab list", ["tab", "list", "--json"]);
+    let response: AgentBrowserTabListResponse;
+    try {
+      response = JSON.parse(raw) as AgentBrowserTabListResponse;
+    } catch (error) {
+      throw new Error(
+        `agent-browser tab list did not return valid JSON: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
+
+    const activeTab = response.data?.tabs?.find((tab) => tab.active);
+    if (!activeTab || typeof activeTab.index !== "number" || !activeTab.url) {
+      throw new Error("agent-browser did not report an active tab");
+    }
+
+    return activeTab;
   }
 
   async close(): Promise<void> {

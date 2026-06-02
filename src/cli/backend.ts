@@ -25,6 +25,8 @@ export interface PreparedSnapshotRequest {
   mode: SnapshotMode;
   browser?: BrowserEngine;
   cdpUrl?: string;
+  useCurrentPage?: boolean;
+  activePageIndex?: number;
 }
 
 export interface PrepareSnapshotRequestDependencies {
@@ -43,13 +45,14 @@ function requireUrl(url: string | undefined, message = "A URL is required"): str
 async function resolveBackend(
   requestedBackend: CliBackend | undefined,
   isAvailable: () => Promise<boolean>,
+  hasPlaywrightOnlyOptions = false,
 ): Promise<CliBackend> {
   if (requestedBackend === "playwright") {
     return "playwright";
   }
 
-  const hasAgentBrowser = await isAvailable();
   if (requestedBackend === "agent-browser") {
+    const hasAgentBrowser = await isAvailable();
     if (!hasAgentBrowser) {
       throw new Error("agent-browser backend requires agent-browser on PATH");
     }
@@ -57,6 +60,11 @@ async function resolveBackend(
     return "agent-browser";
   }
 
+  if (hasPlaywrightOnlyOptions) {
+    return "playwright";
+  }
+
+  const hasAgentBrowser = await isAvailable();
   return hasAgentBrowser ? "agent-browser" : "playwright";
 }
 
@@ -95,7 +103,8 @@ export async function prepareSnapshotRequest(
     }
   }
 
-  const backend = await resolveBackend(input.backend, checkAgentBrowser);
+  const hasPlaywrightOnlyOptions = input.mode === "walker" || input.browser !== undefined;
+  const backend = await resolveBackend(input.backend, checkAgentBrowser, hasPlaywrightOnlyOptions);
 
   if (backend === "agent-browser") {
     const agentBrowser = new AgentBrowserBackend({
@@ -103,7 +112,8 @@ export async function prepareSnapshotRequest(
       runner: dependencies.agentBrowserRunner,
     });
 
-    const url = input.useCurrentPage ? await agentBrowser.getCurrentUrl() : requireUrl(input.url);
+    const activeTab = input.useCurrentPage ? await agentBrowser.getActiveTab() : undefined;
+    const url = activeTab?.url ?? requireUrl(input.url);
     if (!url) {
       throw new Error("agent-browser did not report a current page URL");
     }
@@ -117,6 +127,8 @@ export async function prepareSnapshotRequest(
       url,
       mode: "cdp",
       cdpUrl: await agentBrowser.getCdpUrl(),
+      useCurrentPage: input.useCurrentPage,
+      activePageIndex: activeTab?.index,
     };
   }
 

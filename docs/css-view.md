@@ -22,11 +22,11 @@ The CLI always writes a JSON document with the capture metadata plus the chosen 
    ```bash
    BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium
    ```
-   > On stripped-down Linux images you may need to install system libraries such as `libicu`, `libjpeg`, `libwebp`, or `libffi` before local Playwright browsers run. Playwright prints the missing list (see `playwright-core/lib/server/registry/dependencies.js` for details).
+   > On stripped-down Linux images, install system libraries such as `libicu`, `libjpeg`, `libwebp`, or `libffi` before local Playwright browsers run. Playwright prints the missing list (see `playwright-core/lib/server/registry/dependencies.js` for details).
 
 ## Usage
 
-```
+```bash
 bun run bin/css-view.ts [url] [options]
 ```
 
@@ -72,9 +72,9 @@ Common examples:
 
 | Flag | Description |
 | --- | --- |
-| `--backend <agent-browser|playwright>` | Choose the browser backend. Defaults to `agent-browser` when the binary is on `PATH`; otherwise falls back to `playwright`. |
-| `--mode <cdp|walker>` | Choose the capture mode. `agent-browser` uses `cdp`; Playwright defaults to `walker`. |
-| `--browser <chromium|firefox|webkit>` | Override the Playwright browser engine. CDP mode requires `chromium`; this cannot be combined with `--backend agent-browser` or `--cdp-url`. |
+| `--backend <agent-browser\|playwright>` | Choose the browser backend. Defaults to `agent-browser` when the binary is on `PATH`; otherwise falls back to `playwright`. |
+| `--mode <cdp\|walker>` | Choose the capture mode. `agent-browser` uses `cdp`; Playwright defaults to `walker`. |
+| `--browser <chromium\|firefox\|webkit>` | Override the Playwright browser engine. CDP mode requires `chromium`; this cannot be combined with `--backend agent-browser` or `--cdp-url`. |
 | `--agent-browser-session <name>` | Select the agent-browser session used by `--backend agent-browser` (default `css-view`). |
 | `--use-current-page` | With `--backend agent-browser`, snapshot the active page in the selected session without opening or navigating a URL. |
 | `--cdp-url <url>` | CDP-only: attach to an existing Chromium CDP endpoint from a tool such as `agent-browser get cdp-url`. Accepts HTTP(S) debugging URLs and WS(S) browser WebSocket URLs. Bypasses backend selection and cannot be combined with `--browser`. |

@@ -18,6 +18,8 @@ export interface SnapshotOptions {
   mode: SnapshotMode;
   browser?: BrowserEngine;
   cdpUrl?: string;
+  useCurrentPage?: boolean;
+  activePageIndex?: number;
   headless?: boolean;
   waitUntil?: "load" | "domcontentloaded" | "networkidle";
   timeoutMs?: number;
@@ -189,18 +191,27 @@ export async function openSnapshotTarget<
     const browser = await browserType.connectOverCDP(plan.cdpUrl, {
       timeout: plan.timeoutMs,
     });
-    const context = browser.contexts()[0] ?? (await browser.newContext());
-    const page = await findOrCreateCdpPage(context, plan, url);
+    try {
+      const context = browser.contexts()[0] ?? (await browser.newContext());
+      const page = await findOrCreateCdpPage(context, plan, url);
 
-    return {
-      browser,
-      context,
-      page,
-      shouldCloseContext: false,
-      async dispose() {
+      return {
+        browser,
+        context,
+        page,
+        shouldCloseContext: false,
+        async dispose() {
+          await browser.close();
+        },
+      };
+    } catch (error) {
+      try {
         await browser.close();
-      },
-    };
+      } catch {
+        // Preserve the original setup error.
+      }
+      throw error;
+    }
   }
 
   if (!browserType.launch) {
@@ -208,20 +219,36 @@ export async function openSnapshotTarget<
   }
 
   const browser = await browserType.launch({ headless: plan.headless });
-  const context = await browser.newContext();
-  const page = await context.newPage();
-  await page.goto(url, { waitUntil: plan.waitUntil, timeout: plan.timeoutMs });
+  let context: TContext | undefined;
+  try {
+    context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(url, { waitUntil: plan.waitUntil, timeout: plan.timeoutMs });
 
-  return {
-    browser,
-    context,
-    page,
-    shouldCloseContext: true,
-    async dispose() {
-      await context.close();
+    const ownedContext = context;
+    return {
+      browser,
+      context: ownedContext,
+      page,
+      shouldCloseContext: true,
+      async dispose() {
+        await ownedContext.close();
+        await browser.close();
+      },
+    };
+  } catch (error) {
+    try {
+      await context?.close();
+    } catch {
+      // Preserve the original setup error.
+    }
+    try {
       await browser.close();
-    },
-  };
+    } catch {
+      // Preserve the original setup error.
+    }
+    throw error;
+  }
 }
 
 export async function captureSnapshot(options: SnapshotOptions): Promise<SnapshotExecutionResult> {
@@ -238,6 +265,8 @@ export async function captureSnapshot(options: SnapshotOptions): Promise<Snapsho
       waitUntil: plan.waitUntil,
       timeoutMs: plan.timeoutMs,
       properties: options.properties,
+      useCurrentPage: options.useCurrentPage,
+      activePageIndex: options.activePageIndex,
     });
 
     return {

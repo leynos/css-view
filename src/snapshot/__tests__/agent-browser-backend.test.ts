@@ -91,6 +91,56 @@ describe("AgentBrowserBackend", () => {
     ]);
   });
 
+  it("gets the active tab from the tab list", async () => {
+    const { calls, runner } = recordingRunner([
+      commandResult({
+        stdout: JSON.stringify({
+          success: true,
+          data: {
+            tabs: [
+              { active: false, index: 0, type: "page", url: "https://example.test/first" },
+              { active: true, index: 1, type: "page", url: "https://example.test/current" },
+            ],
+          },
+          error: null,
+        }),
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-current",
+      runner,
+    });
+
+    const activeTab = await backend.getActiveTab();
+
+    expect(activeTab).toEqual({
+      active: true,
+      index: 1,
+      type: "page",
+      url: "https://example.test/current",
+    });
+    expect(calls).toEqual([
+      ["agent-browser", "--session", "css-view-current", "tab", "list", "--json"],
+    ]);
+  });
+
+  it("requires an active tab in the tab list", async () => {
+    const { runner } = recordingRunner([
+      commandResult({
+        stdout: JSON.stringify({
+          success: true,
+          data: { tabs: [{ active: false, index: 0, url: "https://example.test/first" }] },
+          error: null,
+        }),
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({ runner });
+
+    await expect(backend.getActiveTab()).rejects.toThrow(
+      "agent-browser did not report an active tab",
+    );
+  });
+
   it("reports stderr and stdout when a command fails", async () => {
     const { runner } = recordingRunner([
       commandResult({

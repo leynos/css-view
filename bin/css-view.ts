@@ -87,6 +87,8 @@ async function main() {
     mode: snapshotRequest.mode,
     browser: snapshotRequest.browser,
     cdpUrl: snapshotRequest.cdpUrl,
+    useCurrentPage: snapshotRequest.useCurrentPage,
+    activePageIndex: snapshotRequest.activePageIndex,
     headless: !opts.headful,
     waitUntil: opts.waitUntil,
     timeoutMs: opts.timeout,

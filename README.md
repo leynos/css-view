@@ -2,7 +2,7 @@
 
 `css-view` is a Bun command-line tool that captures computed CSS snapshots
 using `agent-browser`, a direct Chromium DevTools Protocol (CDP) endpoint, or
-a local Playwright browser. It is distributed under the [ISC License](LICENSE).
+a local Playwright browser. It is distributed under the [ISC Licence](LICENSE).
 
 ## Quick start
 
@@ -15,7 +15,7 @@ bun run bin/css-view.ts https://example.org --pretty
 
 On Fedora and Rocky, `agent-browser` is the recommended backend. `css-view`
 uses it by default when the `agent-browser` binary is on `PATH`; pass
-`--backend playwright` only when you want a local Playwright browser launch or
+`--backend playwright` only for a local Playwright browser launch or
 walker-mode capture.
 
 ## Hello World
@@ -62,7 +62,7 @@ bun run bin/css-view.ts \
   --pretty
 ```
 
-If you already have a CDP endpoint, bypass backend selection with `--cdp-url`:
+When a CDP endpoint already exists, bypass backend selection with `--cdp-url`:
 
 ```bash
 CDP_URL="$(agent-browser --session css-view get cdp-url)"

@@ -24,7 +24,7 @@ See `docs/css-view.md` for the architectural background and option reference.
 - Playwright 1.48 or newer.
 - Fedora and Rocky recommended path: `agent-browser` installed on `PATH`.
 - Local Playwright path: Playwright browser binaries downloaded manually for
-  the browsers you intend to launch.
+  the browsers that will be launched.
 - Linux systems using local Playwright browsers must provide ICU, JPEG, WebP,
   and FFI libraries as listed in the Playwright dependency validator.
 
@@ -40,39 +40,39 @@ agent-browser install
 backend. `css-view` does not download Chromium, Firefox, or WebKit during
 `postinstall`.
 
-Install Playwright browsers only when you need the local Playwright backend,
+Install Playwright browsers only when the local Playwright backend is needed,
 for example walker mode or an explicit Playwright CDP capture:
 
 ```bash
 BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium
 ```
 
-Use `firefox` or `webkit` in that command only if you plan to launch those
+Use `firefox` or `webkit` in that command only when launching those
 engines with `--backend playwright --browser <engine>`. The Playwright
 installer warns if shared libraries are missing. Install the packages flagged
 in the warning before attempting a local Playwright capture run.
 
 ### Global installation
 
-You can expose the CLI globally with:
+To expose the CLI globally, use:
 
 ```bash
 bun install -g .
 ```
 
-Add the Bun binary directory (`~/.bun/bin` by default) to your `PATH`, so the
+Add the Bun binary directory (`~/.bun/bin` by default) to `PATH`, so the
 `css-view` command resolves everywhere. The package has no browser-download
 `postinstall` hook. Install `agent-browser` for the default backend, or install
 Playwright browsers manually for local Playwright captures.
 
-If you install from a packaged tarball, provide an absolute path:
+When installing from a packaged tarball, provide an absolute path:
 
 ```bash
 bun install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
 The helper script `scripts/install.sh` packs the project, resolves the
-absolute archive path, and invokes the global install for you.
+absolute archive path, and invokes the global install.
 
 ## Running snapshots
 
@@ -193,8 +193,8 @@ then captures the DOM snapshot.
 
 ## Local Playwright backend
 
-Use the Playwright backend when you need walker mode or a browser launched by
-Playwright rather than `agent-browser`:
+Use the Playwright backend when walker mode or a browser launched by
+Playwright rather than `agent-browser` is needed:
 
 ```bash
 bunx playwright install chromium firefox webkit
@@ -224,7 +224,7 @@ secrets.
 
 - **agent-browser not found:** Install it with
   `npm install -g agent-browser`, run `agent-browser install`, and confirm
-  `agent-browser --version` works on `PATH`. If you cannot install it, pass
+  `agent-browser --version` works on `PATH`. If it cannot be installed, pass
   `--backend playwright` and install the needed Playwright browser.
 - **Browser download warnings:** For local Playwright captures, install the
   missing system libraries named in the Playwright warning banner, then re-run
@@ -244,4 +244,4 @@ secrets.
 
 ## Licensing
 
-`css-view` is distributed under the terms of the [ISC License](../LICENSE).
+`css-view` is distributed under the terms of the [ISC Licence](../LICENSE).

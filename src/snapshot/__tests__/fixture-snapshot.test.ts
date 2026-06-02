@@ -27,6 +27,27 @@ function findWalkerNode(
   return undefined;
 }
 
+function findWalkerNodeByClass(
+  node: WalkerNodeSnapshot | null,
+  className: string,
+): WalkerNodeSnapshot | undefined {
+  if (!node) {
+    return undefined;
+  }
+  if (node.classes.includes(className)) {
+    return node;
+  }
+
+  for (const child of node.children) {
+    const found = findWalkerNodeByClass(child, className);
+    if (found) {
+      return found;
+    }
+  }
+
+  return undefined;
+}
+
 function findCdpNode(nodes: CdpSnapshotNode[], id: string): CdpSnapshotNode | undefined {
   return nodes.find((node) => node.attributes.id === id);
 }
@@ -57,7 +78,7 @@ describe("fixture-backed snapshots", () => {
     }
 
     const title = findWalkerNode(result.payload.tree, "title");
-    const card = result.payload.tree?.children[1]?.children[0];
+    const card = findWalkerNodeByClass(result.payload.tree, "card");
 
     expect(title?.text).toBe("Hello World");
     expect(title?.styleDiff.color).toBe("rgb(34, 34, 136)");

@@ -30,8 +30,15 @@ The phase 2 success condition is a clean install-oriented interface:
 
 ```bash
 css-view https://example.org --pretty
-css-view https://example.org --backend agent-browser --agent-browser-session css-view --pretty
-css-view --backend agent-browser --agent-browser-session css-view --use-current-page --pretty
+css-view https://example.org \
+  --backend agent-browser \
+  --agent-browser-session css-view \
+  --pretty
+css-view \
+  --backend agent-browser \
+  --agent-browser-session css-view \
+  --use-current-page \
+  --pretty
 css-view https://example.org --backend playwright --mode walker --pretty
 ```
 
@@ -455,7 +462,10 @@ If `agent-browser` is installed in the implementation environment, also run:
 ```bash
 agent-browser open http://127.0.0.1:<fixture-port>/
 CDP_URL="$(agent-browser get cdp-url)"
-bun run bin/css-view.ts "http://127.0.0.1:<fixture-port>/" --mode cdp --cdp-url "$CDP_URL" --pretty
+bun run bin/css-view.ts "http://127.0.0.1:<fixture-port>/" \
+  --mode cdp \
+  --cdp-url "$CDP_URL" \
+  --pretty
 ```
 
 The final completion audit must prove every explicit requirement:

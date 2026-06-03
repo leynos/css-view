@@ -1,7 +1,7 @@
 {
   "name": "css-view",
   "version": "0.1.0",
-  "description": "Capture computed CSS snapshots for any page via Playwright + Bun",
+  "description": "Capture computed CSS snapshots for any page via agent-browser, CDP, or Playwright",
   "type": "module",
   "license": "ISC",
   "bin": {
@@ -9,10 +9,9 @@
   },
   "scripts": {
     "start": "bun run bin/css-view.ts",
-    "test": "bun test",
+    "test": "bun test --max-concurrency=1 src/e2e/__tests__ && bun test --max-concurrency=1 src/cli/__tests__ && bun test --max-concurrency=1 src/snapshot/__tests__",
     "lint": "bunx @biomejs/biome check .",
-    "fmt": "bunx @biomejs/biome format --write .",
-    "postinstall": "bunx playwright install chromium firefox webkit"
+    "fmt": "bunx @biomejs/biome format --write ."
   },
   "repository": {
     "type": "git",

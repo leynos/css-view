@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
 
 if ! command -v bun >/dev/null 2>&1; then
-  echo "\n[bun missing] Please install Bun before running this script." >&2
+  printf '\n[bun missing] Please install Bun before running this script.\n' >&2
   exit 1
 fi
 
@@ -35,6 +35,6 @@ if ! bun install -g "$ABS_TARBALL"; then
   exit 1
 fi
 
-echo "\ncss-view linked globally. Ensure the Bun bin directory (typically ~/.bun/bin) is on your PATH."
-echo "If Bun blocked the postinstall script, review untrusted packages with:\n  bun pm -g untrusted"
-echo "Then trust and rerun the Playwright download with:\n  bun pm -g trust ${PKG_NAME}\n  bun pm -g run postinstall ${PKG_NAME}"
+printf '\ncss-view linked globally. Ensure the Bun bin directory (typically ~/.bun/bin) is on your PATH.\n'
+printf 'Recommended backend on Fedora and Rocky:\n  npm install -g agent-browser\n  agent-browser install\n'
+printf 'For local Playwright captures, install only the browsers needed, for example:\n  bunx playwright install chromium\n'

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>css-view networkidle fixture</title>
+  </head>
+  <body>
+    <h1 id="delayed-title">Waiting for network idle</h1>
+    <script>
+      window.addEventListener("load", () => {
+        // Keep this below the 500ms CDP idle window; the networkidle e2e verifies
+        // that the post-load fetch delays the snapshot until the style is applied.
+        setTimeout(async () => {
+          const response = await fetch("./styles.css", { cache: "no-store" });
+          await response.text();
+          document.querySelector("#delayed-title").style.color = "rgb(12, 120, 40)";
+        }, 200);
+      });
+    </script>
+  </body>
+</html>

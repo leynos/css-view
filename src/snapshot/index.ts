@@ -1,5 +1,21 @@
-import { type BrowserType, chromium, firefox, webkit } from "playwright";
-import { type CdpSnapshotResult, captureWithCdp } from "./cdp";
+/**
+ * Snapshot planning and browser lifecycle orchestration.
+ *
+ * This module is the public snapshot facade used by the CLI. It validates the
+ * requested capture mode, chooses either a local Playwright browser or direct
+ * CDP endpoint capture, owns browser/context cleanup, and delegates payload
+ * collection to the CDP and walker capture modules.
+ */
+import {
+  type Browser,
+  type BrowserContext,
+  type BrowserType,
+  type Page,
+  chromium,
+  firefox,
+  webkit,
+} from "playwright";
+import { type CdpSnapshotResult, captureWithCdp, captureWithCdpEndpoint } from "./cdp";
 import { type WalkerSnapshotResult, captureWithWalker } from "./walker";
 
 export type SnapshotMode = "cdp" | "walker";
@@ -9,6 +25,9 @@ export interface SnapshotOptions {
   url: string;
   mode: SnapshotMode;
   browser?: BrowserEngine;
+  cdpUrl?: string;
+  useCurrentPage?: boolean;
+  activePageIndex?: number;
   headless?: boolean;
   waitUntil?: "load" | "domcontentloaded" | "networkidle";
   timeoutMs?: number;
@@ -30,36 +49,257 @@ export interface SnapshotExecutionResult {
   payload: SnapshotPayload;
 }
 
+export type BrowserSource = "local" | "cdp-url";
+
+export interface SnapshotPlan {
+  browser: BrowserEngine;
+  browserSource: BrowserSource;
+  cdpUrl?: string;
+  waitUntil: "load" | "domcontentloaded" | "networkidle";
+  headless: boolean;
+  timeoutMs: number;
+}
+
+export interface SnapshotTargetPage {
+  url(): string;
+  goto(
+    url: string,
+    options: { waitUntil: "load" | "domcontentloaded" | "networkidle"; timeout: number },
+  ): Promise<unknown>;
+}
+
+export interface SnapshotTargetContext<TPage extends SnapshotTargetPage = SnapshotTargetPage> {
+  pages(): readonly TPage[];
+  newPage(): Promise<TPage>;
+  close(): Promise<void>;
+}
+
+export interface SnapshotTargetBrowser<TContext extends SnapshotTargetContext = BrowserContext> {
+  contexts(): readonly TContext[];
+  newContext(): Promise<TContext>;
+  close(): Promise<void>;
+}
+
+export interface SnapshotTargetBrowserType<TBrowser> {
+  launch?(options: { headless: boolean }): Promise<TBrowser>;
+  connectOverCDP?(url: string, options: { timeout: number }): Promise<TBrowser>;
+}
+
+export interface SnapshotTarget<
+  TPage extends SnapshotTargetPage,
+  TContext extends SnapshotTargetContext<TPage>,
+  TBrowser extends SnapshotTargetBrowser<TContext>,
+> {
+  browser: TBrowser;
+  context: TContext;
+  page: TPage;
+  shouldCloseContext: boolean;
+  dispose(): Promise<void>;
+}
+
 const browserMap: Record<BrowserEngine, BrowserType> = {
   chromium,
   firefox,
   webkit,
 };
 
-export async function captureSnapshot(options: SnapshotOptions): Promise<SnapshotExecutionResult> {
-  const browserName: BrowserEngine =
-    options.browser ?? (options.mode === "cdp" ? "chromium" : "firefox");
+const supportedCdpProtocols = new Set(["http:", "https:", "ws:", "wss:"]);
 
-  if (options.mode === "cdp" && browserName !== "chromium") {
-    throw new Error("CDP snapshots require the Chromium browser");
+function validateCdpUrl(cdpUrl: string): void {
+  let parsed: URL;
+  try {
+    parsed = new URL(cdpUrl);
+  } catch {
+    throw new Error("--cdp-url must be a valid URL");
   }
 
+  if (!supportedCdpProtocols.has(parsed.protocol)) {
+    throw new Error("--cdp-url must use http:, https:, ws:, or wss:");
+  }
+}
+
+export function resolveSnapshotPlan(options: SnapshotOptions): SnapshotPlan {
   const waitUntil = options.waitUntil ?? "networkidle";
   const headless = options.headless ?? true;
   const timeoutMs = options.timeoutMs ?? 45000;
 
-  const browserType = browserMap[browserName];
-  const browser = await browserType.launch({ headless });
-  const context = await browser.newContext();
-  const page = await context.newPage();
+  if (options.cdpUrl) {
+    if (options.mode !== "cdp") {
+      throw new Error("--cdp-url requires --mode cdp");
+    }
+    if (options.browser) {
+      throw new Error("--browser cannot be combined with --cdp-url");
+    }
+
+    validateCdpUrl(options.cdpUrl);
+
+    return {
+      browser: "chromium",
+      browserSource: "cdp-url",
+      cdpUrl: options.cdpUrl,
+      waitUntil,
+      headless,
+      timeoutMs,
+    };
+  }
+
+  const browser: BrowserEngine =
+    options.browser ?? (options.mode === "cdp" ? "chromium" : "firefox");
+
+  if (options.mode === "cdp" && browser !== "chromium") {
+    throw new Error("CDP snapshots require the Chromium browser");
+  }
+
+  return {
+    browser,
+    browserSource: "local",
+    waitUntil,
+    headless,
+    timeoutMs,
+  };
+}
+
+async function findOrCreateCdpPage<TPage extends SnapshotTargetPage>(
+  context: SnapshotTargetContext<TPage>,
+  plan: SnapshotPlan,
+  url: string,
+): Promise<TPage> {
+  const pages = context.pages();
+  const existingPage = pages.find((page) => page.url() === url);
+  const page = existingPage ?? pages[0] ?? (await context.newPage());
+
+  if (page.url() !== url) {
+    await page.goto(url, { waitUntil: plan.waitUntil, timeout: plan.timeoutMs });
+  }
+
+  return page;
+}
+
+export async function openSnapshotTarget<
+  TPage extends SnapshotTargetPage,
+  TContext extends SnapshotTargetContext<TPage>,
+  TBrowser extends SnapshotTargetBrowser<TContext>,
+>({
+  plan,
+  url,
+  browserType,
+}: {
+  plan: SnapshotPlan;
+  url: string;
+  browserType: SnapshotTargetBrowserType<TBrowser>;
+}): Promise<SnapshotTarget<TPage, TContext, TBrowser>> {
+  if (plan.browserSource === "cdp-url") {
+    if (!plan.cdpUrl) {
+      throw new Error("CDP endpoint URL is required for CDP URL snapshots");
+    }
+    if (!browserType.connectOverCDP) {
+      throw new Error("CDP URL snapshots require a Chromium browser type");
+    }
+
+    const browser = await browserType.connectOverCDP(plan.cdpUrl, {
+      timeout: plan.timeoutMs,
+    });
+    try {
+      const context = browser.contexts()[0] ?? (await browser.newContext());
+      const page = await findOrCreateCdpPage(context, plan, url);
+
+      return {
+        browser,
+        context,
+        page,
+        shouldCloseContext: false,
+        async dispose() {
+          await browser.close();
+        },
+      };
+    } catch (error) {
+      try {
+        await browser.close();
+      } catch {
+        // Preserve the original setup error.
+      }
+      throw error;
+    }
+  }
+
+  if (!browserType.launch) {
+    throw new Error("Local snapshots require a launchable browser type");
+  }
+
+  const browser = await browserType.launch({ headless: plan.headless });
+  let context: TContext | undefined;
+  try {
+    context = await browser.newContext();
+    const page = await context.newPage();
+    await page.goto(url, { waitUntil: plan.waitUntil, timeout: plan.timeoutMs });
+
+    const ownedContext = context;
+    return {
+      browser,
+      context: ownedContext,
+      page,
+      shouldCloseContext: true,
+      async dispose() {
+        await ownedContext.close();
+        await browser.close();
+      },
+    };
+  } catch (error) {
+    try {
+      await context?.close();
+    } catch {
+      // Preserve the original setup error.
+    }
+    try {
+      await browser.close();
+    } catch {
+      // Preserve the original setup error.
+    }
+    throw error;
+  }
+}
+
+export async function captureSnapshot(options: SnapshotOptions): Promise<SnapshotExecutionResult> {
+  const plan = resolveSnapshotPlan(options);
+
+  if (plan.browserSource === "cdp-url") {
+    if (!plan.cdpUrl) {
+      throw new Error("CDP endpoint URL is required for CDP URL snapshots");
+    }
+
+    const payload = await captureWithCdpEndpoint({
+      cdpUrl: plan.cdpUrl,
+      url: options.url,
+      waitUntil: plan.waitUntil,
+      timeoutMs: plan.timeoutMs,
+      properties: options.properties,
+      useCurrentPage: options.useCurrentPage,
+      activePageIndex: options.activePageIndex,
+    });
+
+    return {
+      url: options.url,
+      capturedAt: new Date().toISOString(),
+      mode: options.mode,
+      browser: plan.browser,
+      waitUntil: plan.waitUntil,
+      headless: plan.headless,
+      payload,
+    };
+  }
+
+  const browserType = browserMap[plan.browser];
+  const target = await openSnapshotTarget<Page, BrowserContext, Browser>({
+    plan,
+    url: options.url,
+    browserType,
+  });
 
   try {
-    await page.goto(options.url, { waitUntil, timeout: timeoutMs });
-
     const payload: SnapshotPayload =
       options.mode === "cdp"
-        ? await captureWithCdp(page, { properties: options.properties })
-        : await captureWithWalker(page, {
+        ? await captureWithCdp(target.page, { properties: options.properties })
+        : await captureWithWalker(target.page, {
             inherited: options.inheritedProperties,
             maxNodes: options.maxNodes ?? 2000,
             textClip: options.textClip ?? 160,
@@ -69,13 +309,12 @@ export async function captureSnapshot(options: SnapshotOptions): Promise<Snapsho
       url: options.url,
       capturedAt: new Date().toISOString(),
       mode: options.mode,
-      browser: browserName,
-      waitUntil,
-      headless,
+      browser: plan.browser,
+      waitUntil: plan.waitUntil,
+      headless: plan.headless,
       payload,
     };
   } finally {
-    await context.close();
-    await browser.close();
+    await target.dispose();
   }
 }

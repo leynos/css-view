@@ -1,13 +1,22 @@
 #!/usr/bin/env -S bun run
+/**
+ * Command-line entrypoint for css-view.
+ *
+ * This module parses user options with Commander, asks the CLI backend layer to
+ * resolve the effective browser transport, and forwards a normalized snapshot
+ * request into the snapshot package.
+ */
 import { promises as fs } from "node:fs";
 import { Command, Option } from "commander";
-import { type SnapshotMode, captureSnapshot } from "../src/snapshot";
+import { prepareSnapshotRequest } from "../src/cli/backend";
+import { captureSnapshot } from "../src/snapshot";
 import {
   DEFAULT_COMPUTED_PROPERTIES,
   DEFAULT_INHERITED_PROPERTIES,
 } from "../src/snapshot/constants";
 import { resolvePropertyList } from "../src/snapshot/property-resolver";
 
+/** Parse non-negative integer CLI option values with a user-facing label. */
 function parseInteger(value: string, label: string): number {
   const parsed = Number.parseInt(value, 10);
   if (Number.isNaN(parsed) || parsed < 0) {
@@ -16,20 +25,25 @@ function parseInteger(value: string, label: string): number {
   return parsed;
 }
 
+/** Build and execute the CLI command, writing the snapshot JSON to file or stdout. */
 async function main() {
   const program = new Command();
   program
     .name("css-view")
-    .description("Capture computed CSS snapshots for any page using Playwright")
-    .argument("<url>", "Target page to inspect")
+    .description("Capture computed CSS snapshots for any page")
+    .argument("[url]", "Target page to inspect")
+    .addOption(new Option("-m, --mode <mode>", "Snapshot mode").choices(["cdp", "walker"]))
     .addOption(
-      new Option("-m, --mode <mode>", "Snapshot backend")
-        .choices(["cdp", "walker"])
-        .default("walker"),
+      new Option("--backend <backend>", "Browser backend")
+        .choices(["agent-browser", "playwright"])
+        .default(undefined),
     )
     .addOption(new Option("-b, --browser <browser>", "Playwright browser engine"))
     .option("--props <list>", "Comma or newline separated list of computed CSS properties")
     .option("--props-file <path>", "File with computed CSS properties, one per line")
+    .option("--cdp-url <url>", "Attach to an existing Chromium CDP endpoint")
+    .option("--agent-browser-session <name>", "agent-browser session name", "css-view")
+    .option("--use-current-page", "Snapshot the active agent-browser page without navigation")
     .option("--inherited <list>", "Walker-only: override inherited property list")
     .option("--inherited-file <path>", "Walker-only: provide inherited props via file")
     .option("--max-nodes <n>", "Walker-only: limit nodes visited", (value) =>
@@ -52,12 +66,8 @@ async function main() {
     .parse(process.argv);
 
   const url = program.args[0];
-  if (!url) {
-    program.error("A URL is required");
-  }
 
   const opts = program.opts();
-  const mode: SnapshotMode = opts.mode;
 
   const properties = await resolvePropertyList({
     defaults: [...DEFAULT_COMPUTED_PROPERTIES],
@@ -71,10 +81,23 @@ async function main() {
     propsFile: opts.inheritedFile,
   });
 
-  const result = await captureSnapshot({
+  const snapshotRequest = await prepareSnapshotRequest({
     url,
-    mode,
+    mode: opts.mode,
+    backend: opts.backend,
     browser: opts.browser,
+    cdpUrl: opts.cdpUrl,
+    useCurrentPage: opts.useCurrentPage,
+    agentBrowserSession: opts.agentBrowserSession,
+  });
+
+  const result = await captureSnapshot({
+    url: snapshotRequest.url,
+    mode: snapshotRequest.mode,
+    browser: snapshotRequest.browser,
+    cdpUrl: snapshotRequest.cdpUrl,
+    useCurrentPage: snapshotRequest.useCurrentPage,
+    activePageIndex: snapshotRequest.activePageIndex,
     headless: !opts.headful,
     waitUntil: opts.waitUntil,
     timeoutMs: opts.timeout,

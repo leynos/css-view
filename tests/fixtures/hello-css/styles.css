@@ -1,0 +1,30 @@
+:root {
+  --fixture-accent: rgb(34, 34, 136);
+}
+
+body {
+  margin: 0;
+  background: rgb(248, 248, 248);
+  color: rgb(24, 24, 24);
+  font-family: Arial, sans-serif;
+}
+
+.card {
+  width: 320px;
+  margin: 12px;
+  padding: 16px;
+  background: rgb(255, 255, 255);
+  border: 2px solid rgb(210, 210, 220);
+}
+
+.hero {
+  margin: 0 0 8px;
+  color: var(--fixture-accent);
+  font-size: 32px;
+}
+
+.muted {
+  margin: 0;
+  color: rgb(80, 80, 80);
+  font-size: 14px;
+}

@@ -27,9 +27,6 @@ jobs:
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
 
-      - name: Audit dependencies
-        run: bun audit
-
       - name: Format
         run: |
           bun run fmt
@@ -46,3 +43,6 @@ jobs:
 
       - name: Test
         run: bun run test
+
+      - name: Audit dependencies
+        run: bun audit

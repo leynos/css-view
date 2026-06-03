@@ -74,24 +74,33 @@ bun run bin/css-view.ts "http://127.0.0.1:${PORT}/index.html" \
 
 ### Global install
 
-To expose `css-view` system-wide, run:
+To expose `css-view` system-wide, pack the project and install the generated
+archive by absolute path:
 
 ```bash
-bun install -g .
+bun pm pack
+bun install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
 Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
 `PATH`, because that is where Bun places the linked executable. The package
 does not download Playwright browsers during `postinstall`; install
 `agent-browser` for the default backend or install Playwright browsers manually
-only for local Playwright captures.
+only for local Playwright captures. `bun install -g .` currently fails on Bun
+1.3.11 with an internal dependency-loop error, so avoid installing directly
+from the package directory.
 
-When installing from a packaged tarball (for example a release artefact), Bun
-needs an absolute path:
+When installing from a packaged tarball, Bun needs an absolute path:
 
 ```bash
 bun install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
+
+If a failed `bun install -g .` left the global Bun manifest with an empty
+dependency entry, remove the stale global package first with
+`bun remove -g css-view`, then remove the bad `""` entry from
+`$(dirname "$(bun pm bin -g)")/install/global/package.json`. The helper script
+performs both cleanup steps automatically before reinstalling.
 
 Run `scripts/install.sh` from the repository root to pack the project and run
 the absolute-path install automatically.

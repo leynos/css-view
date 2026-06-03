@@ -7,7 +7,7 @@ a local Playwright browser. It is distributed under the [ISC Licence](LICENSE).
 ## Quick start
 
 ```bash
-BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bun install
+bun install
 npm install -g agent-browser
 agent-browser install
 bun run bin/css-view.ts https://example.org --pretty

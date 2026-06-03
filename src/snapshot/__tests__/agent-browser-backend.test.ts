@@ -71,6 +71,50 @@ describe("AgentBrowserBackend", () => {
     ]);
   });
 
+  it("retries transient event stream failures when opening a cold session", async () => {
+    const { calls, runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "Event stream closed\n",
+      }),
+      commandResult(),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-cold",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    await backend.open("https://example.test/cold");
+
+    expect(calls).toEqual([
+      ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
+      ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
+    ]);
+  });
+
+  it("reports the retry result when a transient open failure persists", async () => {
+    const { runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "Event stream closed\n",
+      }),
+      commandResult({
+        exitCode: 2,
+        stderr: "browser still unavailable\n",
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-cold",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    await expect(backend.open("https://example.test/cold")).rejects.toThrow(
+      "agent-browser open failed with exit code 2\nstderr: browser still unavailable",
+    );
+  });
+
   it("gets the active URL and closes the selected session", async () => {
     const { calls, runner } = recordingRunner([
       commandResult({ stdout: "https://example.test/current\n" }),

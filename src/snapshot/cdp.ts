@@ -6,7 +6,6 @@
  * attach to agent-browser or provider-managed browser endpoints.
  */
 import type { Page } from "playwright";
-import type { Protocol } from "playwright-core/types/protocol";
 
 export interface BoundingBox {
   x: number;
@@ -77,10 +76,35 @@ interface GetTargetsResult {
   targetInfos: TargetInfo[];
 }
 
+interface DomSnapshotParameters extends Record<string, unknown> {
+  computedStyles: string[];
+  includePaintOrder: boolean;
+  includeDOMRects: boolean;
+  includeBlendedBackgroundColors: boolean;
+  includeTextColorOpacities: boolean;
+}
+
+interface DomSnapshotResponse {
+  strings?: string[];
+  documents: Array<{
+    nodes: {
+      attributes?: number[][];
+      nodeName?: number[];
+      nodeType?: Array<number | null>;
+      nodeValue?: number[];
+      parentIndex?: number[];
+    };
+    layout: {
+      bounds?: number[][];
+      nodeIndex?: number[];
+      styles?: number[][];
+      text?: number[];
+    };
+  }>;
+}
+
 /** Build the DOMSnapshot request for the caller's computed-style whitelist. */
-const snapshotParameters = (
-  properties: string[],
-): Protocol.DOMSnapshot.captureSnapshotParameters => ({
+const snapshotParameters = (properties: string[]): DomSnapshotParameters => ({
   computedStyles: properties,
   includePaintOrder: true,
   includeDOMRects: true,
@@ -427,7 +451,7 @@ async function attachToPage(
 
 /** Convert Chromium DOMSnapshot output into css-view's stable CDP payload. */
 function buildCdpSnapshotResult(
-  response: Protocol.DOMSnapshot.captureSnapshotReturnValue,
+  response: DomSnapshotResponse,
   properties: string[],
 ): CdpSnapshotResult {
   const strings = response.strings ?? [];
@@ -543,7 +567,7 @@ export async function captureWithCdpEndpoint({
       useCurrentPage,
       activePageIndex,
     });
-    const response = await connection.send<Protocol.DOMSnapshot.captureSnapshotReturnValue>(
+    const response = await connection.send<DomSnapshotResponse>(
       "DOMSnapshot.captureSnapshot",
       snapshotParameters(properties),
       sessionId,
@@ -564,7 +588,7 @@ export async function captureWithCdp(
   const response = (await session.send(
     "DOMSnapshot.captureSnapshot",
     snapshotParameters(properties),
-  )) as Protocol.DOMSnapshot.captureSnapshotReturnValue;
+  )) as DomSnapshotResponse;
 
   return buildCdpSnapshotResult(response, properties);
 }

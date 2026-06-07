@@ -96,11 +96,8 @@ When installing from a packaged tarball, Bun needs an absolute path:
 bun install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
-If a failed `bun install -g .` left the global Bun manifest with an empty
-dependency entry, remove the stale global package first with
-`bun remove -g css-view`, then remove the bad `""` entry from
-`$(dirname "$(bun pm bin -g)")/install/global/package.json`. The helper script
-performs both cleanup steps automatically before reinstalling.
+If you hit a corrupt global manifest, see
+[docs/users-guide.md](docs/users-guide.md) for the recovery steps.
 
 Run `scripts/install.sh` from the repository root to pack the project and run
 the absolute-path install automatically.

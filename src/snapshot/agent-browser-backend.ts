@@ -18,6 +18,7 @@ export type AgentBrowserCommandRunner = (
 export interface AgentBrowserBackendOptions {
   session?: string;
   runner?: AgentBrowserCommandRunner;
+  /** Retry delay applied after a transient `open` failure, in milliseconds. */
   transientOpenFailureDelayMs?: number;
 }
 
@@ -38,7 +39,7 @@ interface AgentBrowserTabListResponse {
 }
 
 export const DEFAULT_AGENT_BROWSER_SESSION = "css-view";
-const transientOpenFailureDelayMs = 500;
+const DEFAULT_TRANSIENT_OPEN_FAILURE_DELAY_MS = 500;
 
 /** Run an agent-browser command and collect stdout, stderr, and exit status. */
 export async function defaultAgentBrowserCommandRunner(
@@ -106,7 +107,7 @@ export class AgentBrowserBackend {
     this.session = session;
     this.runner = options.runner ?? defaultAgentBrowserCommandRunner;
     this.transientOpenFailureDelayMs =
-      options.transientOpenFailureDelayMs ?? transientOpenFailureDelayMs;
+      options.transientOpenFailureDelayMs ?? DEFAULT_TRANSIENT_OPEN_FAILURE_DELAY_MS;
   }
 
   /** Navigate the selected session to the requested URL. */

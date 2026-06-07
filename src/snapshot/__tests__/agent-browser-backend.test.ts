@@ -93,6 +93,27 @@ describe("AgentBrowserBackend", () => {
     ]);
   });
 
+  it("does not retry when an open failure is not transient", async () => {
+    const { calls, runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "browser unavailable\n",
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-no-retry",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    await expect(backend.open("https://example.test/no-retry")).rejects.toThrow(
+      "agent-browser open failed with exit code 1\nstderr: browser unavailable",
+    );
+    expect(calls).toEqual([
+      ["agent-browser", "--session", "css-view-no-retry", "open", "https://example.test/no-retry"],
+    ]);
+  });
+
   it("reports the retry result when a transient open failure persists", async () => {
     const { runner } = recordingRunner([
       commandResult({

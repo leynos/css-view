@@ -59,7 +59,7 @@ by absolute path:
 
 ```bash
 bun pm pack
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 Add the Bun binary directory (`~/.bun/bin` by default) to `PATH`, so the
@@ -72,7 +72,7 @@ installing directly from the package directory.
 When installing from a packaged tarball, provide an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 If a failed `bun install -g .` left the global Bun manifest with an empty

@@ -83,7 +83,7 @@ bun install -g "$(pwd)/css-view-0.1.0.tgz"
 ```
 
 Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
-`PATH`, because that is where Bun places the linked executable. The package
+`PATH` because that is where Bun places the linked executable. The package
 does not download Playwright browsers during `postinstall`; install
 `agent-browser` for the default backend or install Playwright browsers manually
 only for local Playwright captures. `bun install -g .` currently fails on Bun

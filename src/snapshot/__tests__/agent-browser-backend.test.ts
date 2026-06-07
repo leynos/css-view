@@ -113,9 +113,9 @@ describe("AgentBrowserBackend", () => {
       transientOpenFailureDelayMs: 0,
     });
 
-    await expect(backend.open("https://example.test/no-retry")).rejects.toThrow(
-      "agent-browser open failed with exit code 1\nstderr: browser unavailable",
-    );
+    const err = await backend.open("https://example.test/no-retry").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
     expect(calls).toEqual([
       ["agent-browser", "--session", "css-view-no-retry", "open", "https://example.test/no-retry"],
     ]);
@@ -138,9 +138,9 @@ describe("AgentBrowserBackend", () => {
       transientOpenFailureDelayMs: 0,
     });
 
-    await expect(backend.open("https://example.test/cold")).rejects.toThrow(
-      "agent-browser open failed with exit code 2\nstderr: browser still unavailable",
-    );
+    const err = await backend.open("https://example.test/cold").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
   });
 
   it("gets the active URL and closes the selected session", async () => {
@@ -228,9 +228,9 @@ describe("AgentBrowserBackend", () => {
     ]);
     const backend = new AgentBrowserBackend({ runner });
 
-    await expect(backend.open("https://example.test")).rejects.toThrow(
-      "agent-browser open failed with exit code 7\nstderr: browser failed\nstdout: partial output",
-    );
+    const err = await backend.open("https://example.test").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
   });
 
   it("rejects empty session names", () => {

@@ -249,6 +249,15 @@ secrets.
   `agent-browser` backend.
 - **Navigation timeouts:** Adjust `--timeout` or use `--wait-until load` for
   pages with continuous network chatter.
+- **"Event stream closed" on stderr:** When `agent-browser` is starting a cold
+  session, the first `open` call can race the event-stream handshake and exit
+  non-zero with `"Event stream closed"` on stderr. `css-view` automatically
+  retries the `open` command once. You will see a
+  `[agent-browser] Transient open failure detected` warning on stderr, followed
+  by `[agent-browser] Retry succeeded.` if recovery succeeds. If the retry also
+  fails, the second error is reported and `css-view` exits non-zero. Verify
+  that the `agent-browser` daemon is running (`agent-browser --version`) and
+  retry the command.
 - **Large pages:** Use `--max-nodes` (walker) or pare down the property list to
   reduce output size.
 

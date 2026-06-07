@@ -30,8 +30,15 @@ The phase 2 success condition is a clean install-oriented interface:
 
 ```bash
 css-view https://example.org --pretty
-css-view https://example.org --backend agent-browser --agent-browser-session css-view --pretty
-css-view --backend agent-browser --agent-browser-session css-view --use-current-page --pretty
+css-view https://example.org \
+  --backend agent-browser \
+  --agent-browser-session css-view \
+  --pretty
+css-view \
+  --backend agent-browser \
+  --agent-browser-session css-view \
+  --use-current-page \
+  --pretty
 css-view https://example.org --backend playwright --mode walker --pretty
 ```
 
@@ -455,7 +462,10 @@ If `agent-browser` is installed in the implementation environment, also run:
 ```bash
 agent-browser open http://127.0.0.1:<fixture-port>/
 CDP_URL="$(agent-browser get cdp-url)"
-bun run bin/css-view.ts "http://127.0.0.1:<fixture-port>/" --mode cdp --cdp-url "$CDP_URL" --pretty
+bun run bin/css-view.ts "http://127.0.0.1:<fixture-port>/" \
+  --mode cdp \
+  --cdp-url "$CDP_URL" \
+  --pretty
 ```
 
 The final completion audit must prove every explicit requirement:
@@ -566,6 +576,25 @@ The final completion audit must prove every explicit requirement:
   current tree. Every explicit backend, validation, documentation, postinstall,
   CDP, testing, Wyvern, Firecrawl, gate, and CodeRabbit requirement is proven
   by committed code, docs, tests, command output, and review evidence.
+- [x] 2026-06-03: Fixed Bun global install by packing with `bun pm pack` and
+  installing the generated tarball by absolute path; repaired stale global
+  manifest entries and removed existing global registrations before
+  reinstalling.
+- [x] 2026-06-03: Hardened `AgentBrowserBackend.open()` to retry once on
+  transient `Event stream closed` failures; added regression tests for
+  one-shot recovery, persistent failure, and non-transient failure non-retry.
+- [x] 2026-06-03: Added GitHub Actions CI: Bun setup via `oven-sh/setup-bun@v2`,
+  frozen-lockfile install, Playwright Chromium for browser tests, sequential
+  gates, and post-test `bun audit`.
+- [x] 2026-06-03: Repaired TypeScript configuration: added `@types/bun`,
+  switched `moduleResolution` to `"bundler"`, removed deprecated `baseUrl`,
+  replaced private Playwright protocol import with local `DomSnapshotParameters`
+  and `DomSnapshotResponse` types.
+- [x] 2026-06-03: Tightened package metadata: `packageManager`, `engines`,
+  `keywords`, `files` allowlist, `repository.url`, and `bugs` object.
+- [x] 2026-06-03: Updated `docs/developers-guide.md` with build tooling,
+  TypeScript config, CI workflow, Bun version requirement, and transient retry
+  mechanism documentation.
 
 ## Surprises & Discoveries
 

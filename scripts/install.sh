@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# install.sh — Pack css-view and install it globally via Bun.
+#
+# This script wraps `bun pm pack` and `bun install -g` to work around a
+# Bun 1.3.11 dependency-loop error that prevents `bun install -g .` from
+# completing. It also repairs stale global manifest entries left by a
+# previously failed install.
+#
+# Usage: run from the repository root:
+#   scripts/install.sh
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -20,14 +29,33 @@ TARBALL="${PKG_NAME}-${PKG_VERSION}.tgz"
 rm -f "$TARBALL"
 
 echo "Packing ${PKG_NAME}@${PKG_VERSION}..."
-bun pack >/dev/null
+bun pm pack --quiet >/dev/null
 
 if [[ ! -f "$TARBALL" ]]; then
-  echo "bun pack did not emit ${TARBALL}" >&2
+  echo "bun pm pack did not emit ${TARBALL}" >&2
   exit 1
 fi
 
 ABS_TARBALL="$(cd "$(dirname "$TARBALL")" && pwd)/$(basename "$TARBALL")"
+
+GLOBAL_MANIFEST="$(dirname "$(bun pm bin -g)")/install/global/package.json"
+if [[ -f "$GLOBAL_MANIFEST" ]] && grep -q '"":[[:space:]]*"\."' "$GLOBAL_MANIFEST"; then
+  echo "Removing stale empty Bun global dependency entry..."
+  bun --eval '
+    const fs = require("node:fs");
+    const manifestPath = process.argv.at(-1);
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    if (manifest.dependencies) {
+      delete manifest.dependencies[""];
+    }
+    fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+  ' "$GLOBAL_MANIFEST"
+fi
+
+if [[ -f "$GLOBAL_MANIFEST" ]] && grep -qF "\"${PKG_NAME}\":" "$GLOBAL_MANIFEST"; then
+  echo "Removing existing global ${PKG_NAME} before reinstalling..."
+  bun remove -g "$PKG_NAME" >/dev/null
+fi
 
 echo "Installing globally from ${ABS_TARBALL}..."
 if ! bun install -g "$ABS_TARBALL"; then

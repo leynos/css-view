@@ -1,0 +1,17 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`AgentBrowserBackend does not retry when an open failure is not transient 1`] = `
+"agent-browser open failed with exit code 1
+stderr: browser unavailable"
+`;
+
+exports[`AgentBrowserBackend reports the retry result when a transient open failure persists 1`] = `
+"agent-browser open failed with exit code 2
+stderr: browser still unavailable"
+`;
+
+exports[`AgentBrowserBackend reports stderr and stdout when a command fails 1`] = `
+"agent-browser open failed with exit code 7
+stderr: browser failed
+stdout: partial output"
+`;

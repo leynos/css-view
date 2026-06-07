@@ -18,6 +18,8 @@ export type AgentBrowserCommandRunner = (
 export interface AgentBrowserBackendOptions {
   session?: string;
   runner?: AgentBrowserCommandRunner;
+  /** Retry delay applied after a transient `open` failure, in milliseconds. */
+  transientOpenFailureDelayMs?: number;
 }
 
 export interface AgentBrowserTab {
@@ -37,6 +39,7 @@ interface AgentBrowserTabListResponse {
 }
 
 export const DEFAULT_AGENT_BROWSER_SESSION = "css-view";
+const DEFAULT_TRANSIENT_OPEN_FAILURE_DELAY_MS = 500;
 
 /** Run an agent-browser command and collect stdout, stderr, and exit status. */
 export async function defaultAgentBrowserCommandRunner(
@@ -84,10 +87,15 @@ function commandError(label: string, result: AgentBrowserCommandResult): Error {
   );
 }
 
+function isTransientOpenFailure(result: AgentBrowserCommandResult): boolean {
+  return result.exitCode !== 0 && result.stderr.includes("Event stream closed");
+}
+
 /** Session-scoped facade over the agent-browser commands used by css-view. */
 export class AgentBrowserBackend {
   readonly session: string;
   readonly runner: AgentBrowserCommandRunner;
+  readonly transientOpenFailureDelayMs: number;
 
   /** Create an adapter bound to one agent-browser session. */
   constructor(options: AgentBrowserBackendOptions = {}) {
@@ -98,11 +106,13 @@ export class AgentBrowserBackend {
 
     this.session = session;
     this.runner = options.runner ?? defaultAgentBrowserCommandRunner;
+    this.transientOpenFailureDelayMs =
+      options.transientOpenFailureDelayMs ?? DEFAULT_TRANSIENT_OPEN_FAILURE_DELAY_MS;
   }
 
   /** Navigate the selected session to the requested URL. */
   async open(url: string): Promise<void> {
-    await this.run("open", ["open", url]);
+    await this.run("open", ["open", url], { retryTransientOpenFailure: true });
   }
 
   /** Return the browser-level CDP WebSocket URL for the selected session. */
@@ -143,8 +153,25 @@ export class AgentBrowserBackend {
   }
 
   /** Execute a session-scoped agent-browser command and return trimmed stdout. */
-  private async run(label: string, command: readonly string[]): Promise<string> {
-    const result = await this.runner(["agent-browser", "--session", this.session, ...command]);
+  private async run(
+    label: string,
+    command: readonly string[],
+    options: { retryTransientOpenFailure?: boolean } = {},
+  ): Promise<string> {
+    const args = ["agent-browser", "--session", this.session, ...command];
+    let result = await this.runner(args);
+
+    if (options.retryTransientOpenFailure && isTransientOpenFailure(result)) {
+      console.warn(
+        `[agent-browser] Transient open failure detected (stderr: ${result.stderr.trim()}). ` +
+          `Retrying in ${this.transientOpenFailureDelayMs} ms…`,
+      );
+      await Bun.sleep(this.transientOpenFailureDelayMs);
+      result = await this.runner(args);
+      if (result.exitCode === 0) {
+        console.warn("[agent-browser] Retry succeeded.");
+      }
+    }
 
     if (result.exitCode !== 0) {
       throw commandError(label, result);

@@ -1,3 +1,10 @@
+/**
+ * Unit tests for the AgentBrowserBackend shell-out adapter.
+ *
+ * These tests verify command construction, session scoping, transient-failure
+ * retry behaviour, non-transient failure handling, and availability detection
+ * using an injectable mock runner. No real agent-browser process is started.
+ */
 import { describe, expect, it } from "bun:test";
 import {
   AgentBrowserBackend,
@@ -69,6 +76,71 @@ describe("AgentBrowserBackend", () => {
       ["agent-browser", "--session", "css-view-test", "open", "https://example.test/page"],
       ["agent-browser", "--session", "css-view-test", "get", "cdp-url"],
     ]);
+  });
+
+  it("retries transient event stream failures when opening a cold session", async () => {
+    const { calls, runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "Event stream closed\n",
+      }),
+      commandResult(),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-cold",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    await backend.open("https://example.test/cold");
+
+    expect(calls).toEqual([
+      ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
+      ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
+    ]);
+  });
+
+  it("does not retry when an open failure is not transient", async () => {
+    const { calls, runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "browser unavailable\n",
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-no-retry",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    const err = await backend.open("https://example.test/no-retry").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
+    expect(calls).toEqual([
+      ["agent-browser", "--session", "css-view-no-retry", "open", "https://example.test/no-retry"],
+    ]);
+  });
+
+  it("reports the retry result when a transient open failure persists", async () => {
+    const { runner } = recordingRunner([
+      commandResult({
+        exitCode: 1,
+        stderr: "Event stream closed\n",
+      }),
+      commandResult({
+        exitCode: 2,
+        stderr: "browser still unavailable\n",
+      }),
+    ]);
+    const backend = new AgentBrowserBackend({
+      session: "css-view-cold",
+      runner,
+      transientOpenFailureDelayMs: 0,
+    });
+
+    const err = await backend.open("https://example.test/cold").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
   });
 
   it("gets the active URL and closes the selected session", async () => {
@@ -156,9 +228,9 @@ describe("AgentBrowserBackend", () => {
     ]);
     const backend = new AgentBrowserBackend({ runner });
 
-    await expect(backend.open("https://example.test")).rejects.toThrow(
-      "agent-browser open failed with exit code 7\nstderr: browser failed\nstdout: partial output",
-    );
+    const err = await backend.open("https://example.test").catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toMatchSnapshot();
   });
 
   it("rejects empty session names", () => {

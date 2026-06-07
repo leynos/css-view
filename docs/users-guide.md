@@ -54,22 +54,32 @@ in the warning before attempting a local Playwright capture run.
 
 ### Global installation
 
-To expose the CLI globally, use:
+To expose the CLI globally, pack the project and install the generated archive
+by absolute path:
 
 ```bash
-bun install -g .
+bun pm pack
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 Add the Bun binary directory (`~/.bun/bin` by default) to `PATH`, so the
 `css-view` command resolves everywhere. The package has no browser-download
 `postinstall` hook. Install `agent-browser` for the default backend, or install
-Playwright browsers manually for local Playwright captures.
+Playwright browsers manually for local Playwright captures. `bun install -g .`
+currently fails on Bun 1.3.11 with an internal dependency-loop error, so avoid
+installing directly from the package directory.
 
 When installing from a packaged tarball, provide an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
+
+If a failed `bun install -g .` left the global Bun manifest with an empty
+dependency entry, remove the stale global package first with
+`bun remove -g css-view`, then remove the bad `""` entry from
+`$(dirname "$(bun pm bin -g)")/install/global/package.json`. The helper script
+performs both cleanup steps automatically before reinstalling.
 
 The helper script `scripts/install.sh` packs the project, resolves the
 absolute archive path, and invokes the global install.
@@ -239,6 +249,15 @@ secrets.
   `agent-browser` backend.
 - **Navigation timeouts:** Adjust `--timeout` or use `--wait-until load` for
   pages with continuous network chatter.
+- **"Event stream closed" on stderr:** When `agent-browser` is starting a cold
+  session, the first `open` call can race the event-stream handshake and exit
+  non-zero with `"Event stream closed"` on stderr. `css-view` automatically
+  retries the `open` command once. You will see a
+  `[agent-browser] Transient open failure detected` warning on stderr, followed
+  by `[agent-browser] Retry succeeded.` if recovery succeeds. If the retry also
+  fails, the second error is reported and `css-view` exits non-zero. Verify
+  that the `agent-browser` daemon is running (`agent-browser --version`) and
+  retry the command.
 - **Large pages:** Use `--max-nodes` (walker) or pare down the property list to
   reduce output size.
 

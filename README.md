@@ -7,7 +7,7 @@ a local Playwright browser. It is distributed under the [ISC Licence](LICENSE).
 ## Quick start
 
 ```bash
-BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bun install
+bun install
 npm install -g agent-browser
 agent-browser install
 bun run bin/css-view.ts https://example.org --pretty
@@ -74,24 +74,30 @@ bun run bin/css-view.ts "http://127.0.0.1:${PORT}/index.html" \
 
 ### Global install
 
-To expose `css-view` system-wide, run:
+To expose `css-view` system-wide, pack the project and install the generated
+archive by absolute path:
 
 ```bash
-bun install -g .
+bun pm pack
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
-`PATH`, because that is where Bun places the linked executable. The package
+`PATH` because that is where Bun places the linked executable. The package
 does not download Playwright browsers during `postinstall`; install
 `agent-browser` for the default backend or install Playwright browsers manually
-only for local Playwright captures.
+only for local Playwright captures. `bun install -g .` currently fails on Bun
+1.3.11 with an internal dependency-loop error, so avoid installing directly
+from the package directory.
 
-When installing from a packaged tarball (for example a release artefact), Bun
-needs an absolute path:
+When installing from a packaged tarball, Bun needs an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
+
+If you hit a corrupt global manifest, see
+[docs/users-guide.md](docs/users-guide.md) for the recovery steps.
 
 Run `scripts/install.sh` from the repository root to pack the project and run
 the absolute-path install automatically.

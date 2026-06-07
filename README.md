@@ -79,7 +79,7 @@ archive by absolute path:
 
 ```bash
 bun pm pack
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
@@ -93,7 +93,7 @@ from the package directory.
 When installing from a packaged tarball, Bun needs an absolute path:
 
 ```bash
-bun install -g "$(pwd)/css-view-0.1.0.tgz"
+bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 If you hit a corrupt global manifest, see

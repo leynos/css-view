@@ -117,3 +117,42 @@ http-server child processes are shared host resources.
 separate serial Bun invocations. Keeping process-heavy browser suites isolated
 prevents a previous suite's child-process state from affecting later CLI
 subprocess assertions.
+
+## Build and tooling
+
+### Bun version requirement
+
+Bun >= 1.3.11 is required. The `engines` field in `package.json` enforces this.
+`bun install -g .` fails on Bun 1.3.11 due to an internal dependency-loop bug;
+use `scripts/install.sh` for global installs. The helper packs the project with
+`bun pm pack` and installs the resulting tarball by absolute path, which avoids
+the bug.
+
+### TypeScript configuration
+
+`tsconfig.json` uses `moduleResolution: "bundler"` and lists `@types/bun` in
+the `types` array for Bun ambient types. Do not revert to `"node"` or
+`"node10"` resolution; both are deprecated in TypeScript 5 and break Bun's
+package-export resolution.
+
+### CI workflow
+
+GitHub Actions runs on `ubuntu-latest`. The workflow installs Bun via the
+`oven-sh/setup-bun` action, restores a frozen lockfile with
+`bun install --frozen-lockfile`, installs Playwright Chromium for browser-backed
+tests, and then runs format, lint, typecheck, Markdown lint, tests, and
+`bun audit` in sequence. The workflow does not cache `node_modules` — it always
+restores from the lockfile so that CI catches lockfile drift. A top-level
+`concurrency` block cancels any in-progress run for the same ref when a new
+event triggers.
+
+### Transient retry mechanism
+
+`AgentBrowserBackend.run()` retries the `open` command once when it detects
+exit code != 0 and stderr containing `"Event stream closed"`. This handles a
+cold-start race in `agent-browser` where the first command after starting a
+session can race the event-stream handshake. The retry delay is configurable
+via the `transientOpenFailureDelayMs` option (default 500 ms). Suppress the
+delay in tests by passing `transientOpenFailureDelayMs: 0`. Non-transient
+failures are surfaced to the caller without retry. Both the retry decision and
+a successful retry are logged to stderr via `console.warn`.

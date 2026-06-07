@@ -162,8 +162,15 @@ export class AgentBrowserBackend {
     let result = await this.runner(args);
 
     if (options.retryTransientOpenFailure && isTransientOpenFailure(result)) {
+      console.warn(
+        `[agent-browser] Transient open failure detected (stderr: ${result.stderr.trim()}). ` +
+          `Retrying in ${this.transientOpenFailureDelayMs} ms…`,
+      );
       await Bun.sleep(this.transientOpenFailureDelayMs);
       result = await this.runner(args);
+      if (result.exitCode === 0) {
+        console.warn("[agent-browser] Retry succeeded.");
+      }
     }
 
     if (result.exitCode !== 0) {

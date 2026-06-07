@@ -1,4 +1,13 @@
 #!/usr/bin/env bash
+# install.sh — Pack css-view and install it globally via Bun.
+#
+# This script wraps `bun pm pack` and `bun install -g` to work around a
+# Bun 1.3.11 dependency-loop error that prevents `bun install -g .` from
+# completing. It also repairs stale global manifest entries left by a
+# previously failed install.
+#
+# Usage: run from the repository root:
+#   scripts/install.sh
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -43,7 +52,7 @@ if [[ -f "$GLOBAL_MANIFEST" ]] && grep -q '"":[[:space:]]*"\."' "$GLOBAL_MANIFES
   ' "$GLOBAL_MANIFEST"
 fi
 
-if [[ -f "$GLOBAL_MANIFEST" ]] && grep -q "\"${PKG_NAME}\":" "$GLOBAL_MANIFEST"; then
+if [[ -f "$GLOBAL_MANIFEST" ]] && grep -qF "\"${PKG_NAME}\":" "$GLOBAL_MANIFEST"; then
   echo "Removing existing global ${PKG_NAME} before reinstalling..."
   bun remove -g "$PKG_NAME" >/dev/null
 fi

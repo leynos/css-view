@@ -1,3 +1,10 @@
+/**
+ * Unit tests for the AgentBrowserBackend shell-out adapter.
+ *
+ * These tests verify command construction, session scoping, transient-failure
+ * retry behaviour, non-transient failure handling, and availability detection
+ * using an injectable mock runner. No real agent-browser process is started.
+ */
 import { describe, expect, it } from "bun:test";
 import {
   AgentBrowserBackend,

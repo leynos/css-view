@@ -5,6 +5,8 @@
  * CDP endpoint, and identify the active page tab in an agent-browser session
  * without coupling snapshot capture to agent-browser process management details.
  */
+import { type RetryAdapter, defaultRetryAdapter } from "./retry-adapter";
+
 export interface AgentBrowserCommandResult {
   exitCode: number;
   stdout: string;
@@ -20,6 +22,8 @@ export interface AgentBrowserBackendOptions {
   runner?: AgentBrowserCommandRunner;
   /** Retry delay applied after a transient `open` failure, in milliseconds. */
   transientOpenFailureDelayMs?: number;
+  /** Resilience adapter supplying the retry delay and operator logging. */
+  retryAdapter?: RetryAdapter;
 }
 
 export interface AgentBrowserTab {
@@ -96,6 +100,7 @@ export class AgentBrowserBackend {
   readonly session: string;
   readonly runner: AgentBrowserCommandRunner;
   readonly transientOpenFailureDelayMs: number;
+  readonly retryAdapter: RetryAdapter;
 
   /** Create an adapter bound to one agent-browser session. */
   constructor(options: AgentBrowserBackendOptions = {}) {
@@ -108,6 +113,7 @@ export class AgentBrowserBackend {
     this.runner = options.runner ?? defaultAgentBrowserCommandRunner;
     this.transientOpenFailureDelayMs =
       options.transientOpenFailureDelayMs ?? DEFAULT_TRANSIENT_OPEN_FAILURE_DELAY_MS;
+    this.retryAdapter = options.retryAdapter ?? defaultRetryAdapter;
   }
 
   /** Navigate the selected session to the requested URL. */
@@ -162,14 +168,14 @@ export class AgentBrowserBackend {
     let result = await this.runner(args);
 
     if (options.retryTransientOpenFailure && isTransientOpenFailure(result)) {
-      console.warn(
+      this.retryAdapter.warn(
         `[agent-browser] Transient open failure detected (stderr: ${result.stderr.trim()}). ` +
           `Retrying in ${this.transientOpenFailureDelayMs} ms…`,
       );
-      await Bun.sleep(this.transientOpenFailureDelayMs);
+      await this.retryAdapter.sleep(this.transientOpenFailureDelayMs);
       result = await this.runner(args);
       if (result.exitCode === 0) {
-        console.warn("[agent-browser] Retry succeeded.");
+        this.retryAdapter.warn("[agent-browser] Retry succeeded.");
       }
     }
 

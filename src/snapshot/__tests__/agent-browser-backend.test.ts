@@ -6,6 +6,7 @@
  * using an injectable mock runner. No real agent-browser process is started.
  */
 import { describe, expect, it } from "bun:test";
+import { createRecordingRetryAdapter } from "../../test-support/recording-retry-adapter";
 import {
   AgentBrowserBackend,
   type AgentBrowserCommandResult,
@@ -40,6 +41,11 @@ function recordingRunner(results: AgentBrowserCommandResult[]): {
   };
 
   return { calls, runner };
+}
+
+/** Build the warning emitted when a transient open failure is first detected. */
+function transientFailureWarning(stderr: string, delayMs: number): string {
+  return `[agent-browser] Transient open failure detected (stderr: ${stderr}). Retrying in ${delayMs} ms…`;
 }
 
 describe("AgentBrowserBackend", () => {
@@ -86,10 +92,11 @@ describe("AgentBrowserBackend", () => {
       }),
       commandResult(),
     ]);
+    const retry = createRecordingRetryAdapter();
     const backend = new AgentBrowserBackend({
       session: "css-view-cold",
       runner,
-      transientOpenFailureDelayMs: 0,
+      retryAdapter: retry.adapter,
     });
 
     await backend.open("https://example.test/cold");
@@ -97,6 +104,11 @@ describe("AgentBrowserBackend", () => {
     expect(calls).toEqual([
       ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
       ["agent-browser", "--session", "css-view-cold", "open", "https://example.test/cold"],
+    ]);
+    expect(retry.sleeps).toEqual([backend.transientOpenFailureDelayMs]);
+    expect(retry.warnings).toEqual([
+      transientFailureWarning("Event stream closed", backend.transientOpenFailureDelayMs),
+      "[agent-browser] Retry succeeded.",
     ]);
   });
 
@@ -107,10 +119,11 @@ describe("AgentBrowserBackend", () => {
         stderr: "browser unavailable\n",
       }),
     ]);
+    const retry = createRecordingRetryAdapter();
     const backend = new AgentBrowserBackend({
       session: "css-view-no-retry",
       runner,
-      transientOpenFailureDelayMs: 0,
+      retryAdapter: retry.adapter,
     });
 
     const err = await backend.open("https://example.test/no-retry").catch((e: unknown) => e);
@@ -119,6 +132,8 @@ describe("AgentBrowserBackend", () => {
     expect(calls).toEqual([
       ["agent-browser", "--session", "css-view-no-retry", "open", "https://example.test/no-retry"],
     ]);
+    expect(retry.sleeps).toEqual([]);
+    expect(retry.warnings).toEqual([]);
   });
 
   it("reports the retry result when a transient open failure persists", async () => {
@@ -132,15 +147,20 @@ describe("AgentBrowserBackend", () => {
         stderr: "browser still unavailable\n",
       }),
     ]);
+    const retry = createRecordingRetryAdapter();
     const backend = new AgentBrowserBackend({
       session: "css-view-cold",
       runner,
-      transientOpenFailureDelayMs: 0,
+      retryAdapter: retry.adapter,
     });
 
     const err = await backend.open("https://example.test/cold").catch((e: unknown) => e);
     expect(err).toBeInstanceOf(Error);
     expect((err as Error).message).toMatchSnapshot();
+    expect(retry.sleeps).toEqual([backend.transientOpenFailureDelayMs]);
+    expect(retry.warnings).toEqual([
+      transientFailureWarning("Event stream closed", backend.transientOpenFailureDelayMs),
+    ]);
   });
 
   it("gets the active URL and closes the selected session", async () => {

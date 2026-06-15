@@ -15,9 +15,11 @@ export interface RetryAdapter {
 
 /** Production adapter backed by `Bun.sleep` and `console.warn`. */
 export const defaultRetryAdapter: RetryAdapter = {
+  /** Delay via `Bun.sleep` so the retry waits the requested interval. */
   sleep(ms: number): Promise<void> {
     return Bun.sleep(ms);
   },
+  /** Forward the message to `console.warn` for operator visibility. */
   warn(message: string): void {
     console.warn(message);
   },

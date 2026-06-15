@@ -14,6 +14,10 @@ structured.
   `agent-browser` sessions, including page opening, CDP URL discovery, and
   active page-tab lookup for current-page captures. Non-page tabs, such as
   DevTools or extension targets, must be ignored before CDP target selection.
+- `src/snapshot/retry-adapter.ts` — injectable resilience adapter
+  (`RetryAdapter` interface) abstracting the retry delay and operator logging;
+  `defaultRetryAdapter` is the production implementation backed by `Bun.sleep`
+  and `console.warn`.
 - `src/snapshot/index.ts` owns snapshot planning, browser target selection, and
   top-level result metadata.
 - `src/snapshot/cdp.ts` owns Chromium DevTools Protocol capture. Local CDP
@@ -24,6 +28,9 @@ structured.
   walker mode.
 - `src/test-support/fixture-server.ts` owns shared fixture-server helpers for
   browser-backed tests.
+- `src/test-support/recording-retry-adapter.ts` —
+  `createRecordingRetryAdapter()` test double that records `sleep` durations
+  and `warn` messages without blocking, for asserting the retry contract.
 
 ## Test layers
 
@@ -79,6 +86,26 @@ Review the snapshot diff before committing. A snapshot update is acceptable
 only when the changed output is part of the intended behaviour.
 
 ## Gate commands
+
+### Makefile targets
+
+A `Makefile` at the repo root wraps the Bun/Biome/tsc toolchain. Each target
+ensures dependencies are installed via `bun install --frozen-lockfile` before
+running, so `bunx @biomejs/biome` resolves to the pinned 1.9.x devDependency
+rather than an incompatible global Biome.
+
+- `make check` runs every commit gate: check-fmt, lint, typecheck, test,
+  markdownlint, and audit.
+- `make check-fmt` verifies formatting without modifying files.
+- `make fmt` applies formatting in place.
+- `make lint` lints sources via Biome.
+- `make typecheck` type-checks without emitting output (`tsc --noEmit`).
+- `make test` runs the full test suite.
+- `make markdownlint` lints Markdown sources.
+- `make nixie` validates Mermaid diagrams in Markdown sources.
+- `make audit` audits dependencies for advisories.
+
+### Running gates manually
 
 Run gates sequentially and log output through `tee`:
 
@@ -152,7 +179,16 @@ event triggers.
 exit code != 0 and stderr containing `"Event stream closed"`. This handles a
 cold-start race in `agent-browser` where the first command after starting a
 session can race the event-stream handshake. The retry delay is configurable
-via the `transientOpenFailureDelayMs` option (default 500 ms). Suppress the
-delay in tests by passing `transientOpenFailureDelayMs: 0`. Non-transient
-failures are surfaced to the caller without retry. Both the retry decision and
-a successful retry are logged to stderr via `console.warn`.
+via the `transientOpenFailureDelayMs` option (default 500 ms). Non-transient
+failures are surfaced to the caller without retry.
+
+The delay and operator warnings are delegated to an injectable `RetryAdapter`
+(constructor option `retryAdapter`, defaulting to `defaultRetryAdapter` from
+`src/snapshot/retry-adapter.ts`). This decouples the domain retry policy from
+the `Bun.sleep` and `console.warn` infrastructure.
+
+Tests inject `createRecordingRetryAdapter()` (from
+`src/test-support/recording-retry-adapter.ts`) in place of
+`defaultRetryAdapter`. The recording adapter resolves `sleep` immediately and
+captures both the sleep durations and warning messages, so the retry timing and
+logging contract can be asserted directly without an actual delay.

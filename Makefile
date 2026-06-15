@@ -8,12 +8,12 @@
 
 BIOME := bunx @biomejs/biome
 
-.PHONY: all check check-fmt fmt lint typecheck test markdownlint audit install
+.PHONY: all check check-fmt fmt lint typecheck test markdownlint nixie audit install
 
-## Run every commit gate.
 all: check
 
-check: check-fmt lint typecheck test
+## Run every commit gate.
+check: check-fmt lint typecheck test markdownlint audit
 
 ## Verify formatting without modifying files.
 check-fmt: node_modules
@@ -38,6 +38,10 @@ test: node_modules
 ## Lint Markdown sources.
 markdownlint: node_modules
 	bunx markdownlint-cli2 README.md docs/**/*.md
+
+## Validate Mermaid diagrams in Markdown sources.
+nixie:
+	nixie README.md docs
 
 ## Audit dependencies for advisories.
 audit: node_modules

@@ -1,3 +1,12 @@
+/**
+ * Integration test suite for `scripts/install.sh`.
+ *
+ * Exercises every logical branch of the installer: successful pack-and-install,
+ * missing-tarball failure, stale empty-key manifest repair, pre-existing global
+ * registration removal, and install-failure propagation. Each test runs inside
+ * an isolated per-test sandbox with a stubbed `bun` on PATH, constructed via
+ * the `createSandbox`/`destroySandbox`, `runInstall`, and `writeStubBun` helpers.
+ */
 import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { writeFile } from "node:fs/promises";
 import { runInstall } from "./helpers/run-install";

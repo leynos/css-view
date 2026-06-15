@@ -81,16 +81,24 @@ set -euo pipefail
 
 printf '%s\\n' "$*" >> ${singleQuote(logPath)}
 
+# Match only the exact global invocations install.sh makes, so a regression
+# that dropped a required -g flag routes to the default arm instead of being
+# silently accepted as its global variant.
 key=""
 case "\${1:-}" in
   pm)
-    case "\${2:-}" in
-      pack) key="pm pack" ;;
-      bin) key="pm bin -g" ;;
-    esac
+    if [[ "\${2:-}" == "pack" ]]; then
+      key="pm pack"
+    elif [[ "\${2:-}" == "bin" && "\${3:-}" == "-g" ]]; then
+      key="pm bin -g"
+    fi
     ;;
-  install) key="install -g" ;;
-  remove) key="remove -g" ;;
+  install)
+    if [[ "\${2:-}" == "-g" ]]; then key="install -g"; fi
+    ;;
+  remove)
+    if [[ "\${2:-}" == "-g" ]]; then key="remove -g"; fi
+    ;;
   --eval) key="--eval" ;;
 esac
 

@@ -45,6 +45,20 @@ Use the smallest layer that proves the behaviour being changed.
   `src/e2e/__tests__/cdp-url.test.ts` starts the fixture, launches Chromium
   with a CDP debugging port, and verifies that `css-view --cdp-url` captures
   the existing page's computed CSS.
+- **Script integration tests** exercise `scripts/install.sh` end-to-end
+  without a real global Bun environment or network access. The suite lives at
+  `scripts/__tests__/install.test.ts`. Each test runs the script inside a
+  throwaway sandbox (`scripts/__tests__/helpers/sandbox.ts`) containing a
+  mock `package.json` and a mock Bun global prefix. A generated `bun` stub
+  is prepended to `PATH`; it records every invocation and replays a
+  configured stdout, stderr, and exit status
+  (`scripts/__tests__/helpers/stub-bun.ts`,
+  `scripts/__tests__/helpers/run-install.ts`). Because `install.sh` deletes
+  any stale tarball before re-packing, the `bun pm pack` stub creates the
+  tarball itself so the success path is reachable. Covered branches include
+  successful install, missing-tarball failure, stale empty-key (`"": "."`)
+  manifest repair, pre-existing registration removal, and
+  install-failure propagation.
 
 ## Fixture server policy
 
@@ -94,6 +108,18 @@ Use `bun run fmt` when Biome reports formatting differences:
 bun run fmt 2>&1 | tee /tmp/fmt-css-view-$(git branch --show).out
 ```
 
+The `Makefile` provides convenience wrappers over the above commands,
+mirroring the CI order:
+
+```bash
+make check-fmt   # verify formatting without modifying files
+make lint        # lint and verify import organisation
+make typecheck   # type-check TypeScript sources and tests
+make test        # run the full test suite
+make fmt         # apply formatting in place
+make check       # run all gates in CI order (check-fmt lint typecheck test)
+```
+
 The default runtime backend uses `agent-browser`. For local smoke testing of
 that path, install:
 
@@ -126,7 +152,8 @@ Bun >= 1.3.11 is required. The `engines` field in `package.json` enforces this.
 `bun install -g .` fails on Bun 1.3.11 due to an internal dependency-loop bug;
 use `scripts/install.sh` for global installs. The helper packs the project with
 `bun pm pack` and installs the resulting tarball by absolute path, which avoids
-the bug.
+the bug. The script's behaviour is covered by the script integration tests
+described in the "Test layers" section above.
 
 ### TypeScript configuration
 

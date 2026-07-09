@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "bun run bin/css-view.ts",
-    "test": "bun test --max-concurrency=1 src/e2e/__tests__ && bun test --max-concurrency=1 src/cli/__tests__ && bun test --max-concurrency=1 src/snapshot/__tests__",
+    "test": "bun test --max-concurrency=1 src/e2e/__tests__ && bun test --max-concurrency=1 src/cli/__tests__ && bun test --max-concurrency=1 src/snapshot/__tests__ && bun test --max-concurrency=1 scripts/__tests__",
     "lint": "bunx @biomejs/biome check .",
     "fmt": "bunx @biomejs/biome format --write ."
   },

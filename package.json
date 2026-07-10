@@ -25,8 +25,10 @@
   "scripts": {
     "start": "bun run bin/css-view.ts",
     "test": "bun test --max-concurrency=1 src/e2e/__tests__ && bun test --max-concurrency=1 src/cli/__tests__ && bun test --max-concurrency=1 src/snapshot/__tests__",
-    "lint": "bunx @biomejs/biome check .",
-    "fmt": "bunx @biomejs/biome format --write ."
+    "lint": "bun x biome check .",
+    "fmt": "bun x biome format --write .",
+    "spelling": "bun run spelling:test && uv run scripts/generate_typos_config.py && git ls-files -z '*.md' | xargs -0 -r uv tool run typos@1.48.0 --config typos.toml --force-exclude",
+    "spelling:test": "PYTHONPATH=scripts uv run --python 3.13 --with pytest==9.0.2 --with pytest-cov==7.0.0 python -m pytest scripts/tests/test_typos_rollout.py --cov=generate_typos_config --cov=typos_rollout --cov=typos_rollout_cache --cov-fail-under=90"
   },
   "repository": {
     "type": "git",

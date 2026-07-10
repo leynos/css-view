@@ -84,6 +84,7 @@ Run gates sequentially and log output through `tee`:
 
 ```bash
 bun run lint 2>&1 | tee /tmp/lint-css-view-$(git branch --show).out
+bun run spelling 2>&1 | tee /tmp/spelling-css-view-$(git branch --show).out
 bun run test 2>&1 | tee /tmp/test-css-view-$(git branch --show).out
 bunx tsc --noEmit 2>&1 | tee /tmp/typecheck-css-view-$(git branch --show).out
 ```
@@ -113,6 +114,15 @@ bunx playwright install chromium
 Do not run these gates in parallel. The browser cache, Bun cache, and
 http-server child processes are shared host resources.
 
+`bun run spelling` runs pinned `typos` 1.48.0 with British English and Oxford
+`-ize` conventions. Its generator refreshes the shared estate dictionary into
+an untracked local cache only when the authority is newer, then merges
+`typos.local.toml`. The generated `typos.toml` is reviewed and committed so a
+clean, network-restricted checkout can enforce the last known-good policy.
+Repository-only proper names or quoted upstream terms belong in
+`typos.local.toml`; never edit generated entries by hand. The gate also runs
+the helper's Python 3.13 tests with at least 90% line coverage.
+
 `bun run test` intentionally runs e2e, CLI, and snapshot/unit suites in
 separate serial Bun invocations. Keeping process-heavy browser suites isolated
 prevents a previous suite's child-process state from affecting later CLI
@@ -140,7 +150,7 @@ package-export resolution.
 GitHub Actions runs on `ubuntu-latest`. The workflow installs Bun via the
 `oven-sh/setup-bun` action, restores a frozen lockfile with
 `bun install --frozen-lockfile`, installs Playwright Chromium for browser-backed
-tests, and then runs format, lint, typecheck, Markdown lint, tests, and
+tests, and then runs format, lint, typecheck, Markdown lint, spelling, tests, and
 `bun audit` in sequence. The workflow does not cache `node_modules` — it always
 restores from the lockfile so that CI catches lockfile drift. A top-level
 `concurrency` block cancels any in-progress run for the same ref when a new

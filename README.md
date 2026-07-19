@@ -1,5 +1,8 @@
 # css-view
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](
+https://deepwiki.com/leynos/css-view)
+
 `css-view` is a Bun command-line tool that captures computed CSS snapshots
 using `agent-browser`, a direct Chromium DevTools Protocol (CDP) endpoint, or
 a local Playwright browser. It is distributed under the [ISC Licence](LICENSE).

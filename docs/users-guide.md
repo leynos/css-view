@@ -6,9 +6,9 @@ adhering to the documentation style set out in
 
 ## Overview
 
-`css-view` emits a JSON snapshot of computed Cascading Style Sheets (CSS)
-data. It can ask `agent-browser` to own the browser session, attach directly to
-an existing Chromium DevTools Protocol (CDP) endpoint, or launch a local
+`css-view` emits a JSON snapshot of computed Cascading Style Sheets (CSS) data.
+It can ask `agent-browser` to own the browser session, attach directly to an
+existing Chromium DevTools Protocol (CDP) endpoint, or launch a local
 Playwright browser. Two capture modes are available:
 
 - `cdp` contacts the Chromium DevTools Protocol (CDP) to retrieve DOM snapshots
@@ -47,10 +47,10 @@ for example walker mode or an explicit Playwright CDP capture:
 BUN_INSTALL=/tmp BUN_TMPDIR=/tmp bunx playwright install chromium
 ```
 
-Use `firefox` or `webkit` in that command only when launching those
-engines with `--backend playwright --browser <engine>`. The Playwright
-installer warns if shared libraries are missing. Install the packages flagged
-in the warning before attempting a local Playwright capture run.
+Use `firefox` or `webkit` in that command only when launching those engines with
+`--backend playwright --browser <engine>`. The Playwright installer warns if
+shared libraries are missing. Install the packages flagged in the warning
+before attempting a local Playwright capture run.
 
 ### Global installation
 
@@ -81,8 +81,8 @@ dependency entry, remove the stale global package first with
 `$(dirname "$(bun pm bin -g)")/install/global/package.json`. The helper script
 performs both cleanup steps automatically before reinstalling.
 
-The helper script `scripts/install.sh` packs the project, resolves the
-absolute archive path, and invokes the global install.
+The helper script `scripts/install.sh` packs the project, resolves the absolute
+archive path, and invokes the global install.
 
 ## Running snapshots
 
@@ -203,8 +203,8 @@ then captures the DOM snapshot.
 
 ## Local Playwright backend
 
-Use the Playwright backend when walker mode or a browser launched by
-Playwright rather than `agent-browser` is needed:
+Use the Playwright backend when walker mode or a browser launched by Playwright
+rather than `agent-browser` is needed:
 
 ```bash
 bunx playwright install chromium firefox webkit

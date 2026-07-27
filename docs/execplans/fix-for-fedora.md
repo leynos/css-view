@@ -1,9 +1,8 @@
 # Add agent-browser CDP URL snapshotting
 
-This ExecPlan (execution plan) is a living document. The sections
-`Constraints`, `Tolerances`, `Risks`, `Progress`, `Surprises & Discoveries`,
-`Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work
-proceeds.
+This ExecPlan (execution plan) is a living document. The sections `Constraints`,
+`Tolerances`, `Risks`, `Progress`, `Surprises & Discoveries`, `Decision Log`,
+and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
 Status: COMPLETE
 
@@ -53,10 +52,10 @@ bridge:
 
 `css-view` can already launch its own Playwright browser and capture computed
 CSS snapshots with either the Chromium DevTools Protocol (CDP) or an in-page
-walker. The requested change makes `css-view` complementary to
-`agent-browser`: an agent can drive a page with `agent-browser`, obtain the
-existing browser's CDP endpoint with `agent-browser get cdp-url`, then ask
-`css-view` to map computed CSS from that same browser state.
+walker. The requested change makes `css-view` complementary to `agent-browser`:
+an agent can drive a page with `agent-browser`, obtain the existing browser's
+CDP endpoint with `agent-browser get cdp-url`, then ask `css-view` to map
+computed CSS from that same browser state.
 
 After this work, a user can run a command like:
 
@@ -125,36 +124,34 @@ metadata and CDP payload shape used by local CDP mode, and does not require
   connection helper that can be tested and documented; do not close user-owned
   pages or contexts.
 - Risk: An agent-browser CDP endpoint may identify a browser-level endpoint,
-  while `css-view` needs a specific page.
-  Severity: medium. Likelihood: medium. Mitigation: support both a positional
-  page URL and the existing browser's current pages. When a URL is provided,
-  attach to an existing context and navigate or select a page deterministically.
+  while `css-view` needs a specific page. Severity: medium. Likelihood: medium.
+  Mitigation: support both a positional page URL and the existing browser's
+  current pages. When a URL is provided, attach to an existing context and
+  navigate or select a page deterministically.
 - Risk: Snapshot tests over real browser output can be noisy because bounding
-  boxes, timestamps, and browser internals vary.
-  Severity: medium. Likelihood: high. Mitigation: canonicalize snapshots by
-  removing `capturedAt`, asserting structural fields directly, and snapshotting
-  only stable fixture-specific subsets.
+  boxes, timestamps, and browser internals vary. Severity: medium. Likelihood:
+  high. Mitigation: canonicalize snapshots by removing `capturedAt`, asserting
+  structural fields directly, and snapshotting only stable fixture-specific
+  subsets.
 - Risk: `bunx http-server -p 0` may print the selected random port differently
-  across versions.
-  Severity: medium. Likelihood: medium. Mitigation: write the fixture server
-  harness to parse the actual startup output; if `http-server` cannot reliably
-  report a random port, document the problem and use a tiny Bun server only for
-  unit scaffolding while preserving the requested `bunx http-server` e2e path.
+  across versions. Severity: medium. Likelihood: medium. Mitigation: write the
+  fixture server harness to parse the actual startup output; if `http-server`
+  cannot reliably report a random port, document the problem and use a tiny Bun
+  server only for unit scaffolding while preserving the requested
+  `bunx http-server` e2e path.
 - Risk: CDP endpoints are powerful control channels.
   Severity: high. Likelihood: high. Mitigation: document that users should only
   pass trusted local or provider-issued CDP URLs and should avoid exposing CDP
   ports to untrusted networks.
 - Risk: A default `agent-browser` backend can surprise existing users who rely
-  on local walker output as the default.
-  Severity: medium. Likelihood: medium. Mitigation: keep
-  `--backend playwright --mode walker` intact, document the backend precedence,
-  and add CLI tests that prove fallback to Playwright when `agent-browser` is
-  unavailable.
+  on local walker output as the default. Severity: medium. Likelihood: medium.
+  Mitigation: keep `--backend playwright --mode walker` intact, document the
+  backend precedence, and add CLI tests that prove fallback to Playwright when
+  `agent-browser` is unavailable.
 - Risk: Shelling out to `agent-browser` can make failures less structured than
-  direct library calls.
-  Severity: medium. Likelihood: high. Mitigation: isolate command execution in
-  an `AgentBrowserBackend` module with injectable runners and clear stderr-rich
-  error messages.
+  direct library calls. Severity: medium. Likelihood: high. Mitigation: isolate
+  command execution in an `AgentBrowserBackend` module with injectable runners
+  and clear stderr-rich error messages.
 
 ## Research and prior art
 
@@ -196,8 +193,7 @@ The current code path is small:
   options, output options, and calls `captureSnapshot()`.
 - `src/snapshot/index.ts` defines `SnapshotOptions`, launches a local
   Playwright browser, creates a new context and page, navigates to
-  `options.url`, then dispatches to `captureWithCdp()` or
-  `captureWithWalker()`.
+  `options.url`, then dispatches to `captureWithCdp()` or `captureWithWalker()`.
 - `src/snapshot/cdp.ts` captures CDP snapshots by creating a CDP session from a
   Playwright `Page` and calling `DOMSnapshot.captureSnapshot`.
 - `src/snapshot/walker.ts` captures computed style differences by evaluating an
@@ -242,8 +238,8 @@ command runner. The module should:
   user-facing errors.
 
 Unit tests should cover command construction, availability detection,
-successful output trimming, and failed commands without starting a real browser.
-Gate, commit, and run CodeRabbit before continuing.
+successful output trimming, and failed commands without starting a real
+browser. Gate, commit, and run CodeRabbit before continuing.
 
 ### Milestone 8: Expose backend selection in the CLI
 
@@ -354,8 +350,7 @@ real CDP endpoint.
 
 ### Milestone 3: Expose CLI behaviour
 
-Add `--cdp-url <url>` to `bin/css-view.ts` and pass it to
-`captureSnapshot()`.
+Add `--cdp-url <url>` to `bin/css-view.ts` and pass it to `captureSnapshot()`.
 
 The CLI should:
 
@@ -512,8 +507,8 @@ The final completion audit must prove every explicit requirement:
   fixture, `bunx http-server` fixture serving on a random available port,
   canonicalized snapshot coverage, and a real external CDP e2e test.
 - [x] 2026-06-01: Implemented Milestone 5 with README Hello World guidance,
-  detailed `docs/users-guide.md` bridge instructions, `docs/css-view.md`
-  option updates, and a new `docs/developers-guide.md` testing strategy.
+  detailed `docs/users-guide.md` bridge instructions, `docs/css-view.md` option
+  updates, and a new `docs/developers-guide.md` testing strategy.
 - [x] 2026-06-01: Gated and committed Milestones 4 and 5.
 - [x] 2026-06-01: Ran final gates: `bun run lint`, `bun run test`, and
   `bunx tsc --noEmit`.
@@ -567,8 +562,8 @@ The final completion audit must prove every explicit requirement:
   `agent-browser` is on `PATH`, and `--use-current-page` capture without
   navigation.
 - [x] 2026-06-01: Ran final deterministic gates: `bun run lint`,
-  `bun run test`, and `bunx tsc --noEmit`. The full test suite passed with
-  47 tests, including unit, behavioural, snapshot, direct CDP e2e, and real
+  `bun run test`, and `bunx tsc --noEmit`. The full test suite passed with 47
+  tests, including unit, behavioural, snapshot, direct CDP e2e, and real
   `agent-browser` backend e2e coverage.
 - [x] 2026-06-01: Requested final CodeRabbit review for Milestone 10;
   CodeRabbit completed with zero findings.
@@ -581,15 +576,15 @@ The final completion audit must prove every explicit requirement:
   manifest entries and removed existing global registrations before
   reinstalling.
 - [x] 2026-06-03: Hardened `AgentBrowserBackend.open()` to retry once on
-  transient `Event stream closed` failures; added regression tests for
-  one-shot recovery, persistent failure, and non-transient failure non-retry.
+  transient `Event stream closed` failures; added regression tests for one-shot
+  recovery, persistent failure, and non-transient failure non-retry.
 - [x] 2026-06-03: Added GitHub Actions CI: Bun setup via `oven-sh/setup-bun@v2`,
   frozen-lockfile install, Playwright Chromium for browser tests, sequential
   gates, and post-test `bun audit`.
 - [x] 2026-06-03: Repaired TypeScript configuration: added `@types/bun`,
   switched `moduleResolution` to `"bundler"`, removed deprecated `baseUrl`,
-  replaced private Playwright protocol import with local `DomSnapshotParameters`
-  and `DomSnapshotResponse` types.
+  replaced private Playwright protocol import with local
+  `DomSnapshotParameters` and `DomSnapshotResponse` types.
 - [x] 2026-06-03: Tightened package metadata: `packageManager`, `engines`,
   `keywords`, `files` allowlist, `repository.url`, and `bugs` object.
 - [x] 2026-06-03: Updated `docs/developers-guide.md` with build tooling,
@@ -605,8 +600,8 @@ The final completion audit must prove every explicit requirement:
   all need to be introduced for this feature.
 - `docs/developers-guide.md` does not exist yet and must be created.
 - Playwright documents CDP attachment as accepting both HTTP debugging URLs and
-  WebSocket endpoints, so `--cdp-url` should not be limited to only
-  `ws://`/`wss://` forms.
+  WebSocket endpoints, so `--cdp-url` should not be limited to only `ws://`/
+  `wss://` forms.
 - Explicit `bunx tsc --noEmit` exposed pre-existing CDP typing drift:
   Playwright 1.48 names the DOM snapshot return type
   `captureSnapshotReturnValue`, and the supported text-colour option is
@@ -625,40 +620,37 @@ The final completion audit must prove every explicit requirement:
 ## Decision Log
 
 - Decision: Add an explicit `--cdp-url` CLI flag rather than overloading
-  `--browser` or `--mode cdp`.
-  Rationale: The endpoint is a browser connection source, not a browser engine.
-  A dedicated option is clearer and matches the user's requested surface.
+  `--browser` or `--mode cdp`. Rationale: The endpoint is a browser connection
+  source, not a browser engine. A dedicated option is clearer and matches the
+  user's requested surface.
 - Decision: Keep the positional `<url>` as the page URL even when `--cdp-url`
-  is present.
-  Rationale: Users need to snapshot a specific page in the attached browser,
-  and this preserves the current CLI shape.
+  is present. Rationale: Users need to snapshot a specific page in the attached
+  browser, and this preserves the current CLI shape.
 - Decision: Prefer rejecting `--browser` together with `--cdp-url`.
   Rationale: The CDP endpoint already determines the browser instance, and
   silently ignoring `--browser` would make troubleshooting harder.
 - Decision: Automated end-to-end tests should use a real CDP endpoint without
-  requiring `agent-browser` to be globally installed.
-  Rationale: This proves protocol compatibility in CI while docs and manual
-  smoke tests cover the `agent-browser get cdp-url` workflow.
+  requiring `agent-browser` to be globally installed. Rationale: This proves
+  protocol compatibility in CI while docs and manual smoke tests cover the
+  `agent-browser get cdp-url` workflow.
 - Decision: Treat the 2026-06-01 continuation request as approval to execute
-  this plan.
-  Rationale: The user resumed the active thread goal after the draft plan and
-  asked to continue working toward the requested end state.
+  this plan. Rationale: The user resumed the active thread goal after the draft
+  plan and asked to continue working toward the requested end state.
 - Decision: Use a direct Bun WebSocket CDP client for external `--cdp-url`
-  captures instead of Playwright `connectOverCDP()`.
-  Rationale: The Playwright CDP attach path repeatedly timed out under Bun in
-  this repository, while direct CDP calls to `Target.*`, `Page.*`, and
-  `DOMSnapshot.captureSnapshot` satisfy the requested bridge and are covered by
-  e2e tests.
+  captures instead of Playwright `connectOverCDP()`. Rationale: The Playwright
+  CDP attach path repeatedly timed out under Bun in this repository, while
+  direct CDP calls to `Target.*`, `Page.*`, and `DOMSnapshot.captureSnapshot`
+  satisfy the requested bridge and are covered by e2e tests.
 - Decision: Implement `--backend agent-browser` as a shell-out adapter that
   obtains the CDP URL itself, rather than requiring users to combine
-  `--backend agent-browser` with `--cdp-url`.
-  Rationale: The requested backend should make `agent-browser` the install-time
-  and launch-time owner of the browser. `--cdp-url` remains the explicit
-  low-level escape hatch for users who already have an endpoint.
+  `--backend agent-browser` with `--cdp-url`. Rationale: The requested backend
+  should make `agent-browser` the install-time and launch-time owner of the
+  browser. `--cdp-url` remains the explicit low-level escape hatch for users
+  who already have an endpoint.
 - Decision: When no backend is specified, prefer `agent-browser` if the binary
-  is available on `PATH`, then fall back to Playwright.
-  Rationale: This matches the Fedora/Rocky reliability goal while preserving a
-  no-extra-flag path for machines that do not have `agent-browser` installed.
+  is available on `PATH`, then fall back to Playwright. Rationale: This matches
+  the Fedora/Rocky reliability goal while preserving a no-extra-flag path for
+  machines that do not have `agent-browser` installed.
 
 ## Outcomes & Retrospective
 
@@ -673,13 +665,13 @@ directly, selects an existing page at the requested URL when present, and calls
 
 The test suite now covers pure option planning, fake browser target selection,
 CLI behaviour, fixture-backed snapshot contracts, and end-to-end external CDP
-capture. The e2e test starts a trivial CSS fixture with `bunx http-server` on
-a random available loopback port and launches Chromium with a real CDP
-debugging port.
+capture. The e2e test starts a trivial CSS fixture with `bunx http-server` on a
+random available loopback port and launches Chromium with a real CDP debugging
+port.
 
-Documentation now includes a README Hello World flow, detailed user guidance
-for `agent-browser get cdp-url`, the `--cdp-url` option in the CLI reference,
-and a developer guide that explains unit, behavioural, snapshot, and e2e test
+Documentation now includes a README Hello World flow, detailed user guidance for
+`agent-browser get cdp-url`, the `--cdp-url` option in the CLI reference, and
+a developer guide that explains unit, behavioural, snapshot, and e2e test
 strategy.
 
 Phase 2 added the first-class `agent-browser` backend. The CLI now supports
@@ -692,8 +684,7 @@ implemented by the direct Bun WebSocket CDP client.
 The package no longer installs Chromium, Firefox, and WebKit during
 `postinstall`. README, the user guide, the developer guide, the CLI reference,
 and the install helper now recommend `agent-browser` for Fedora/Rocky and
-describe Playwright browser downloads as optional for local Playwright
-captures.
+describe Playwright browser downloads as optional for local Playwright captures.
 
 The final validation suite covers unit tests for adapter and backend
 resolution, behavioural CLI tests, fixture-backed snapshot tests, direct CDP

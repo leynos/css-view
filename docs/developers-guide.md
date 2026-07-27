@@ -48,11 +48,10 @@ Use the smallest layer that proves the behaviour being changed.
 
 ## Fixture server policy
 
-Browser-backed tests use the trivial CSS fixture in
-`tests/fixtures/hello-css`. The tests must serve it with `bunx http-server`.
-Because `http-server -p 0` does not reliably expose an OS-selected ephemeral
-port in version 14.1.1, the helper first reserves a random available loopback
-port and then starts:
+Browser-backed tests use the trivial CSS fixture in `tests/fixtures/hello-css`.
+The tests must serve it with `bunx http-server`. Because `http-server -p 0`
+does not reliably expose an OS-selected ephemeral port in version 14.1.1, the
+helper first reserves a random available loopback port and then starts:
 
 ```bash
 bunx http-server tests/fixtures/hello-css -p "$PORT" -a 127.0.0.1 -c-1
@@ -104,8 +103,7 @@ agent-browser install
 ```
 
 Browser-backed tests that launch Chromium directly require Playwright's
-Chromium browser. Install it with the project toolchain when the cache is
-empty:
+Chromium browser. Install it with the project toolchain when the cache is empty:
 
 ```bash
 bunx playwright install chromium
@@ -140,21 +138,21 @@ the bug.
 
 ### TypeScript configuration
 
-`tsconfig.json` uses `moduleResolution: "bundler"` and lists `@types/bun` in
-the `types` array for Bun ambient types. Do not revert to `"node"` or
-`"node10"` resolution; both are deprecated in TypeScript 5 and break Bun's
-package-export resolution.
+`tsconfig.json` uses `moduleResolution: "bundler"` and lists `@types/bun` in the
+`types` array for Bun ambient types. Do not revert to `"node"` or `"node10"`
+resolution; both are deprecated in TypeScript 5 and break Bun's package-export
+resolution.
 
 ### CI workflow
 
 GitHub Actions runs on `ubuntu-latest`. The workflow installs Bun via the
 `oven-sh/setup-bun` action, restores a frozen lockfile with
-`bun install --frozen-lockfile`, installs Playwright Chromium for browser-backed
-tests, and then runs format, lint, typecheck, Markdown lint, spelling, tests, and
-`bun audit` in sequence. The workflow does not cache `node_modules` — it always
-restores from the lockfile so that CI catches lockfile drift. A top-level
-`concurrency` block cancels any in-progress run for the same ref when a new
-event triggers.
+`bun install --frozen-lockfile`, installs Playwright Chromium for
+browser-backed tests, and then runs format, lint, typecheck, Markdown lint,
+spelling, tests, and `bun audit` in sequence. The workflow does not cache
+`node_modules` — it always restores from the lockfile so that CI catches
+lockfile drift. A top-level `concurrency` block cancels any in-progress run for
+the same ref when a new event triggers.
 
 ### Transient retry mechanism
 

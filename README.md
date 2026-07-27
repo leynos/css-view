@@ -3,9 +3,9 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](
 https://deepwiki.com/leynos/css-view)
 
-`css-view` is a Bun command-line tool that captures computed CSS snapshots
-using `agent-browser`, a direct Chromium DevTools Protocol (CDP) endpoint, or
-a local Playwright browser. It is distributed under the [ISC Licence](LICENSE).
+`css-view` is a Bun command-line tool that captures computed CSS snapshots using
+`agent-browser`, a direct Chromium DevTools Protocol (CDP) endpoint, or a
+local Playwright browser. It is distributed under the [ISC Licence](LICENSE).
 
 ## Quick start
 
@@ -86,12 +86,12 @@ bun install -g "$(pwd)/css-view-<VERSION>.tgz"
 ```
 
 Ensure `~/.bun/bin` (or the directory reported by `bun pm bin`) is on your
-`PATH` because that is where Bun places the linked executable. The package
-does not download Playwright browsers during `postinstall`; install
-`agent-browser` for the default backend or install Playwright browsers manually
-only for local Playwright captures. `bun install -g .` currently fails on Bun
-1.3.11 with an internal dependency-loop error, so avoid installing directly
-from the package directory.
+`PATH` because that is where Bun places the linked executable. The package does
+not download Playwright browsers during `postinstall`; install `agent-browser`
+for the default backend or install Playwright browsers manually only for local
+Playwright captures. `bun install -g .` currently fails on Bun 1.3.11 with an
+internal dependency-loop error, so avoid installing directly from the package
+directory.
 
 When installing from a packaged tarball, Bun needs an absolute path:
 

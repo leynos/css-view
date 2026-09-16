@@ -82,9 +82,11 @@ When implementing changes, adhere to the following testing procedures:
     - **Linting:** Passes lint checks (`make markdownlint`, formatting can be
       applied by running `make fmt`).
     - **Spelling:** Passes `bun run spelling`, which enforces
-      en-GB-oxendict prose with pinned `typos` 1.48.0. Put narrow
-      repository-only exceptions in `typos.local.toml`; never edit generated
-      `typos.toml` entries by hand.
+      en-GB-oxendict prose. The gate regenerates `typos.toml` from the live
+      shared dictionary and the `typos.local.toml` overlay on every run, so
+      `typos.toml` is never drift checked in CI. Put narrow repository-only
+      exceptions in `typos.local.toml`; never edit generated `typos.toml`
+      entries by hand.
     - **Mermaid diagrams:** Passes validation using nixie (`make nixie`)
 
 - **Committing:**

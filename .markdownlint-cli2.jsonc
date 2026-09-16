@@ -2,8 +2,28 @@
   "config": {
     "MD013": {
       "line_length": 80,
-      "code_blocks": false,
-      "tables": false
+      "code_block_line_length": 120,
+      "tables": false,
+      "headings": false
+    },
+    "MD004": {
+      "style": "dash"
+    },
+    "MD010": {
+      "code_blocks": false
+    },
+    "MD029": {
+      "style": "ordered"
     }
-  }
+  },
+  "ignores": [
+    "**/.venv/**",
+    ".vtcode/**",
+    "**/node_modules/**",
+    "**/target/**",
+    ".terraform/**",
+    ".uv-cache/**",
+    "memories/**",
+    "CRUSH.md"
+  ]
 }

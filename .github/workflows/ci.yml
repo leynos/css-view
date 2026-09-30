@@ -50,7 +50,7 @@ jobs:
         run: bunx tsc --noEmit
 
       - name: Install mdtablefix
-        uses: leynos/shared-actions/.github/actions/install-mdtablefix@dbe2e22ceaf498d85512679ccded38be9dbe7777
+        uses: leynos/shared-actions/.github/actions/install-mdtablefix@b7d70b5d3ff0ac0199416b9678ea7af25bb3254e
         with:
           version: "0.6.0"
 

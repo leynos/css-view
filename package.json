@@ -39,7 +39,7 @@
   },
   "author": "Payton McIntosh <pmcintosh@df12.net>",
   "dependencies": {
-    "commander": "^15.0.0",
+    "commander": "^15.1.0",
     "playwright": "^1.65.0"
   },
   "devDependencies": {

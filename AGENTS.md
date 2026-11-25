@@ -81,12 +81,8 @@ When implementing changes, adhere to the following testing procedures:
 
     - **Linting:** Passes lint checks (`make markdownlint`, formatting can be
       applied by running `make fmt`).
-    - **Spelling:** Passes `bun run spelling`, which enforces
-      en-GB-oxendict prose. The gate regenerates `typos.toml` from the live
-      shared dictionary and the `typos.local.toml` overlay on every run, so
-      `typos.toml` is never drift checked in CI. Put narrow repository-only
-      exceptions in `typos.local.toml`; never edit generated `typos.toml`
-      entries by hand.
+    - **Spelling:** Passes the en-GB-oxendict spelling gate (`bun run
+      spelling`; see Spelling below).
     - **Mermaid diagrams:** Passes validation using nixie (`make nixie`)
 
 - **Committing:**
@@ -135,3 +131,19 @@ When implementing changes, adhere to the following testing procedures:
   - Ensure the refactoring adheres to the testing guidelines (behavioural tests
     pass before and after, unit tests added for new units).
   - Ensure the refactoring commit itself passes all quality gates.
+
+<!-- typos-config-builder:agents-md:start -->
+
+## Spelling
+
+- `make spelling` runs the pinned `typos-config-builder gate`, which
+  regenerates `typos.toml` from the shared en-GB-oxendict dictionary and
+  `typos.local.toml`, then checks spelling and the shared phrase corrections.
+- `typos.toml` is generated: never edit it by hand. Put narrow
+  repository-specific exceptions in `typos.local.toml`, as exact or full-line
+  patterns rather than bare accepted words.
+- When `make spelling` changes `typos.toml`, commit the regenerated file. If
+  the change is unrelated to your work, commit it in a separate base pull
+  request and stack your branch on it, so each review diff stays focused.
+
+<!-- typos-config-builder:agents-md:end -->

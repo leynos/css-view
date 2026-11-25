@@ -112,14 +112,15 @@ bunx playwright install chromium
 Do not run these gates in parallel. The browser cache, Bun cache, and
 http-server child processes are shared host resources.
 
-`bun run spelling` runs the shared `typos-config-builder` gate, enforcing
-British English with Oxford `-ize` conventions. The gate regenerates
-`typos.toml` on every run from the live shared estate dictionary and the
-`typos.local.toml` overlay, so a word added to the shared dictionary needs no
-change here. Because the dictionary is live, `typos.toml` must never be drift
-checked in continuous integration. Repository-only identifiers, proper names,
-or quoted upstream terms belong in `typos.local.toml`; never edit generated
-entries by hand.
+`bun run spelling` runs `make spelling`, which invokes the shared
+`typos-config-builder` gate (pinned to v0.1.4 in the `Makefile` and run under
+Python 3.14), enforcing British English with Oxford `-ize` conventions. The
+gate regenerates `typos.toml` on every run from the live shared estate
+dictionary and the `typos.local.toml` overlay, so a word added to the shared
+dictionary needs no change here. Because the dictionary is live, `typos.toml`
+must never be drift checked in continuous integration. Repository-only
+identifiers, proper names, or quoted upstream terms belong in
+`typos.local.toml`; never edit generated entries by hand.
 
 `bun run test` intentionally runs e2e, CLI, and snapshot/unit suites in
 separate serial Bun invocations. Keeping process-heavy browser suites isolated

@@ -1,4 +1,10 @@
-.PHONY: fmt check-fmt markdownlint
+.PHONY: fmt check-fmt markdownlint spelling
+
+UV ?= uv
+TYPOS_CONFIG_BUILDER_VERSION ?= v0.1.4
+TYPOS_CONFIG_BUILDER = $(UV) tool run --python 3.14 --from \
+	"git+https://github.com/leynos/typos-config-builder.git@$(TYPOS_CONFIG_BUILDER_VERSION)" \
+	typos-config-builder
 
 MDLINT ?= $(shell command -v markdownlint-cli2 2>/dev/null || printf '%s' "$$HOME/.bun/bin/markdownlint-cli2")
 # `make fmt` and `make check-fmt` call mdtablefix directly. `--git` selects the
@@ -19,3 +25,6 @@ check-fmt:
 
 markdownlint:
 	$(MDLINT) '**/*.md'
+
+spelling: ## Enforce en-GB-oxendict spelling
+	$(TYPOS_CONFIG_BUILDER) gate --repository .
